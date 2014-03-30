@@ -1,0 +1,30 @@
+#############################################
+#The parameter file for the auction simulator
+#############################################
+
+#Log-level: default or debug (gives more information)
+loglevel default
+
+#training data (e.g. ua.base)
+traindata set1.base
+
+#test data (e.g. ua.test)
+testdata set1.test
+
+#size of the neighbourhood
+neighbourhoodsize 500
+
+#use threshold instead of neighbourhood
+threshold false
+
+#predictor algorithms (averagebased, useraverage, userbased, itembased)
+predictors userbased
+
+#similarity metrics (cosine, pearson)
+smetrics pearson
+
+#prediction metrics (weightedsum, adjustedsum, adjustedweightedsum)
+pmetrics adjustedweightedsum
+
+#normalize
+normalize false 1 5
