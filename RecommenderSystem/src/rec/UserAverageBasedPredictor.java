@@ -19,11 +19,11 @@ public class UserAverageBasedPredictor extends Predictor {
 
 	// hashmap: userID --> hashmap: movieID --> rating
 	// for every user a hashmap of movie ratings
-	private TreeMap<Integer, HashMap<Integer, Integer>> UserMovieRatings;
+	private TreeMap<Integer, HashMap<Integer, Double>> UserMovieRatings;
 
 	public UserAverageBasedPredictor() {
 		UserRatedMovies = new HashMap<Integer, HashSet<Integer>>();
-		UserMovieRatings = new TreeMap<Integer, HashMap<Integer, Integer>>();
+		UserMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 		averageRatings = new HashMap<Integer, Double>();
 	}
 
@@ -32,7 +32,7 @@ public class UserAverageBasedPredictor extends Predictor {
 	 * This method trains the predictor using the data given in the input array 'data'
 	 * @param data: an array of triples (user, movie, rating)
 	 */
-	public void train(int[][] data) {
+	public void train(double[][] data) {
 
 		initializeUserMovieRatings(data);
 		initializeUserRatedMovies(data);
@@ -58,16 +58,16 @@ public class UserAverageBasedPredictor extends Predictor {
 	 * @param data
 	 *            : the input data file
 	 */
-	public void initializeUserRatedMovies(int[][] data) {
+	public void initializeUserRatedMovies(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
 			// user already in the hash map
 			if (UserRatedMovies.containsKey(data[i][0])) {
 				HashSet<Integer> movies = UserRatedMovies.get(data[i][0]);
-				movies.add(data[i][1]);
+				movies.add((int) data[i][1]);
 			} else {
 				HashSet<Integer> movies = new HashSet<Integer>();
-				movies.add(data[i][1]);
-				UserRatedMovies.put(data[i][0], movies);
+				movies.add((int) data[i][1]);
+				UserRatedMovies.put((int) data[i][0], movies);
 			}
 
 		}
@@ -79,14 +79,15 @@ public class UserAverageBasedPredictor extends Predictor {
 	 * @param data
 	 *            : the input data file
 	 */
-	public void initializeUserMovieRatings(int[][] data) {
+	public void initializeUserMovieRatings(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
 			if (UserMovieRatings.containsKey(data[i][0])) {
-				UserMovieRatings.get(data[i][0]).put(data[i][1], data[i][2]);
+				UserMovieRatings.get(data[i][0]).put((int) data[i][1],
+						data[i][2]);
 			} else {
-				HashMap<Integer, Integer> ratings = new HashMap<Integer, Integer>();
-				ratings.put(data[i][1], data[i][2]);
-				UserMovieRatings.put(data[i][0], ratings);
+				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
+				ratings.put((int) data[i][1], data[i][2]);
+				UserMovieRatings.put((int) data[i][0], ratings);
 			}
 		}
 	}
@@ -97,7 +98,7 @@ public class UserAverageBasedPredictor extends Predictor {
 	 * @param data
 	 *            : input data
 	 */
-	public void computeUserAverageRatings(int[][] data) {
+	public void computeUserAverageRatings(double[][] data) {
 
 		for (Integer userID : UserRatedMovies.keySet()) {
 			double rating = 0;
@@ -113,7 +114,7 @@ public class UserAverageBasedPredictor extends Predictor {
 		return UserRatedMovies;
 	}
 
-	public TreeMap<Integer, HashMap<Integer, Integer>> getUserMovieRatings() {
+	public TreeMap<Integer, HashMap<Integer, Double>> getUserMovieRatings() {
 		return UserMovieRatings;
 	}
 

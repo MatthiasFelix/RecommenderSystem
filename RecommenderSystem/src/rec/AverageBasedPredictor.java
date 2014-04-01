@@ -18,7 +18,7 @@ public class AverageBasedPredictor extends Predictor {
 	 * This method trains the predictor using the data given in the input array 'data'
 	 * @param data: an array of triples (user, movie, rating)
 	 */
-	public void train(int[][] data) {
+	public void train(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
 			averageRating += data[i][2];
 		}

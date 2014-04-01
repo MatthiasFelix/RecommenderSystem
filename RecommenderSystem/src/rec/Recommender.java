@@ -18,11 +18,8 @@ public class Recommender {
 	private static boolean useThreshold = false;
 	private static double[] settings = new double[10];
 
-	private static int minimumRating, maximumRating;
-	private static boolean normalize = false;
-
-	private static int[][] trainData;
-	private static int[][] testData;
+	private static double[][] trainData;
+	private static double[][] testData;
 
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListMovies = 0;
@@ -166,7 +163,7 @@ public class Recommender {
 	 * @return root mean square error of the predictions
 	 */
 	public static double runTest(String predictor, String smetric,
-			String pmetric, int[][] trainData, int[][] testData) {
+			String pmetric, double[][] trainData, double[][] testData) {
 
 		Predictor p = null;
 
@@ -187,7 +184,8 @@ public class Recommender {
 		int N = testData.length;
 		double[] predictions = new double[N];
 		for (int i = 0; i < N; i++) {
-			predictions[i] = p.predict(testData[i][0], testData[i][1]);
+			predictions[i] = p.predict((int) testData[i][0],
+					(int) testData[i][1]);
 		}
 
 		if (logLevel == DEBUG) {
@@ -196,9 +194,9 @@ public class Recommender {
 			System.out.println("========================================");
 			System.out.println("User \t Movie \t Rating  Prediction");
 			for (int i = 0; i < N; i++) {
-				System.out.println((String.format("%d \t %d \t %d \t %.3f \n",
-						testData[i][0], testData[i][1], testData[i][2],
-						predictions[i])));
+				System.out.println((String.format(
+						"%d \t %d \t %.3f \t %.3f \n", (int) testData[i][0],
+						(int) testData[i][1], testData[i][2], predictions[i])));
 			}
 		}
 
@@ -208,6 +206,7 @@ public class Recommender {
 			RMSE += (predictions[i] - testData[i][2])
 					* (predictions[i] - testData[i][2]);
 		}
+
 		RMSE = Math.sqrt(RMSE / (double) N);
 
 		return RMSE;
@@ -221,9 +220,9 @@ public class Recommender {
 	 *            : the data file
 	 * @return an integer array (user, movie, rating)_i
 	 */
-	public static int[][] readData(String fileName) {
+	public static double[][] readData(String fileName) {
 		BufferedReader b;
-		int[][] data = null;
+		double[][] data = null;
 		try {
 			b = new BufferedReader(new FileReader(fileName));
 			String line;
@@ -235,12 +234,12 @@ public class Recommender {
 			b.close();
 
 			// data is of the form: (userID, movieID,rating)_i
-			data = new int[N][3];
+			data = new double[N][3];
 			int count = 0;
 			b = new BufferedReader(new FileReader(fileName));
 			while ((line = b.readLine()) != null) {
 				String[] s = line.split("\t");
-				for (int i = 0; i < 3; i++) {
+				for (int i = 0; i < 2; i++) {
 					try {
 						data[count][i] = new Integer(s[i]);
 					} catch (NumberFormatException nfe) {
@@ -249,6 +248,12 @@ public class Recommender {
 						nfe.printStackTrace();
 					}
 
+				}
+				try {
+					data[count][2] = new Double(s[2]);
+				} catch (NumberFormatException nfe) {
+					System.err.println("rating data must be of type double.");
+					nfe.printStackTrace();
 				}
 				count++;
 			}
@@ -330,30 +335,16 @@ public class Recommender {
 		useThreshold = threshold;
 	}
 
+	public static void setFileDirectory(String s) {
+		fileDirectory = s + "/";
+	}
+
 	public static void setAverageSizeOfSimilarityListMovies(double size) {
 		averageSizeOfSimilarityListMovies = size;
 	}
 
 	public static void setAverageSizeOfSimilarityListUsers(double size) {
 		averageSizeOfSimilarityListUsers = size;
-	}
-
-	public static void setMinAndMax(int min, int max) {
-		minimumRating = min;
-		maximumRating = max;
-		normalize = true;
-	}
-
-	public static int getMin() {
-		return minimumRating;
-	}
-
-	public static int getMax() {
-		return maximumRating;
-	}
-
-	public static boolean isNormalize() {
-		return normalize;
 	}
 
 }

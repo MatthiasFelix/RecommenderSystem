@@ -19,7 +19,7 @@ import java.util.Random;
 public class CrossValidator {
 
 	public static void main(String[] args) {
-		divide("lastfm-2k/user_artists.data", 1, 5);
+		divide("lastfm-2k/user_artists_n.data", 0.8, 5);
 	}
 
 	/**
@@ -59,10 +59,10 @@ public class CrossValidator {
 
 		for (int i = 1; i <= repetitions; i++) {
 			File baseFile = new File(
-					"/Users/matthiasfelix/Documents/Programming/Eclipse_Workspace/RecommenderSystem/lastfm-2k/set"
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
 							+ i + ".base");
 			File testFile = new File(
-					"/Users/matthiasfelix/Documents/Programming/Eclipse_Workspace/RecommenderSystem/lastfm-2k/set"
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
 							+ i + ".test");
 			FileWriter baseFileWriter;
 			FileWriter testFileWriter;

@@ -19,7 +19,7 @@ public class ParseInput {
 	private static final String smetrics = "smetrics";
 	private static final String pmetrics = "pmetrics";
 	private static final String threshold = "threshold";
-	private static final String normalize = "normalize";
+	private static final String dataset = "dataset";
 
 	public static void setParameters(String fileName) {
 
@@ -88,18 +88,14 @@ public class ParseInput {
 					Recommender.setPredictionMetrics(pmet);
 				}
 
+				else if (line.contains(dataset)) {
+					s = line.split(" ");
+					Recommender.setFileDirectory(s[1]);
+				}
+
 				else if (line.contains(loglevel)) {
 					s = line.split(" ");
 					Recommender.setLoglevel(s[1]);
-				}
-
-				else if (line.contains(normalize)) {
-					s = line.split(" ");
-					if (s[1].equals("true")) {
-						int min = Integer.parseInt(s[2]);
-						int max = Integer.parseInt(s[3]);
-						Recommender.setMinAndMax(min, max);
-					}
 				}
 
 			}

@@ -75,14 +75,9 @@ public class ItemBasedPredictor extends Predictor {
 	 *            : an array of triples (user, movie, rating)
 	 */
 	@Override
-	public void train(int[][] data) {
+	public void train(double[][] data) {
 
 		initializeUserMovieRatings(data);
-
-		if (Recommender.isNormalize()) {
-			DataManipulator.normalizeRatings(userMovieRatings);
-		}
-
 		initializeUserRatedMovies(data);
 		initializeUsersByMovie(data);
 
@@ -272,16 +267,16 @@ public class ItemBasedPredictor extends Predictor {
 	 * @param data
 	 *            : the input data file
 	 */
-	public void initializeUserRatedMovies(int[][] data) {
+	public void initializeUserRatedMovies(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
 			// user already in the hash map
-			if (userRatedMovies.containsKey(data[i][0])) {
-				HashSet<Integer> movies = userRatedMovies.get(data[i][0]);
-				movies.add(data[i][1]);
+			if (userRatedMovies.containsKey((int) data[i][0])) {
+				HashSet<Integer> movies = userRatedMovies.get((int) data[i][0]);
+				movies.add((int) data[i][1]);
 			} else {
 				HashSet<Integer> movies = new HashSet<Integer>();
-				movies.add(data[i][1]);
-				userRatedMovies.put(data[i][0], movies);
+				movies.add((int) data[i][1]);
+				userRatedMovies.put((int) data[i][0], movies);
 			}
 
 		}
@@ -293,15 +288,15 @@ public class ItemBasedPredictor extends Predictor {
 	 * @param data
 	 *            : the input data file
 	 */
-	public void initializeUserMovieRatings(int[][] data) {
+	public void initializeUserMovieRatings(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
-			if (userMovieRatings.containsKey(data[i][0])) {
-				userMovieRatings.get(data[i][0]).put(data[i][1],
-						(double) data[i][2]);
+			if (userMovieRatings.containsKey((int) data[i][0])) {
+				userMovieRatings.get((int) data[i][0]).put((int) data[i][1],
+						data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
-				ratings.put(data[i][1], (double) data[i][2]);
-				userMovieRatings.put(data[i][0], ratings);
+				ratings.put((int) data[i][1], data[i][2]);
+				userMovieRatings.put((int) data[i][0], ratings);
 			}
 		}
 	}
@@ -312,19 +307,19 @@ public class ItemBasedPredictor extends Predictor {
 	 * @param data
 	 *            : input data file
 	 */
-	public void initializeUsersByMovie(int[][] data) {
+	public void initializeUsersByMovie(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
-			if (usersByMovie.containsKey(data[i][1])) {
-				usersByMovie.get(data[i][1]).add(data[i][0]);
+			if (usersByMovie.containsKey((int) data[i][1])) {
+				usersByMovie.get((int) data[i][1]).add((int) data[i][0]);
 			} else {
 				HashSet<Integer> raters = new HashSet<Integer>();
-				raters.add(data[i][0]);
-				usersByMovie.put(data[i][1], raters);
+				raters.add((int) data[i][0]);
+				usersByMovie.put((int) data[i][1], raters);
 			}
 		}
 	}
 
-	public void computeAverageMovieRatings(int[][] data) {
+	public void computeAverageMovieRatings(double[][] data) {
 
 		for (Integer movieID : usersByMovie.keySet()) {
 			double rating = 0;
@@ -336,7 +331,7 @@ public class ItemBasedPredictor extends Predictor {
 		}
 	}
 
-	public void computeAverageUserRatings(int[][] data) {
+	public void computeAverageUserRatings(double[][] data) {
 
 		for (Integer userID : userRatedMovies.keySet()) {
 			double rating = 0;
