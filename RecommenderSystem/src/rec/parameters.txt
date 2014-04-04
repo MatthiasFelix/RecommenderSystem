@@ -14,6 +14,9 @@ traindata set1.base
 #test data (e.g. ua.test)
 testdata set1.test
 
+#number of crossvalidations
+crossvalidations 1
+
 #use threshold instead of neighbourhood
 threshold false
 
@@ -21,10 +24,10 @@ threshold false
 neighbourhoodsize 500
 
 #predictor algorithms (averagebased, useraverage, userbased, itembased)
-predictors userbased itembased
+predictors userbased
 
 #similarity metrics (cosine, pearson)
-smetrics pearson cosine
+smetrics cosine pearson
 
 #prediction metrics (weightedsum, adjustedsum, adjustedweightedsum)
 pmetrics adjustedweightedsum

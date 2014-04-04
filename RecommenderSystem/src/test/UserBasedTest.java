@@ -20,7 +20,7 @@ public class UserBasedTest {
 	public void testUserBasedPredictor() {
 
 		UserBasedPredictor p = new UserBasedPredictor(20, "pearson",
-				"adjustedweightedsum");
+				"adjustedweightedsum", false);
 		p.train(trainData);
 
 		// Test pearson similarities between all users

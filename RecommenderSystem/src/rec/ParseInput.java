@@ -20,6 +20,7 @@ public class ParseInput {
 	private static final String pmetrics = "pmetrics";
 	private static final String threshold = "threshold";
 	private static final String dataset = "dataset";
+	private static final String crossvalidations = "crossvalidations";
 
 	public static void setParameters(String fileName) {
 
@@ -91,6 +92,11 @@ public class ParseInput {
 				else if (line.contains(dataset)) {
 					s = line.split(" ");
 					Recommender.setFileDirectory(s[1]);
+				}
+
+				else if (line.contains(crossvalidations)) {
+					s = line.split(" ");
+					Recommender.setCrossValidations(Integer.parseInt(s[1]));
 				}
 
 				else if (line.contains(loglevel)) {

@@ -20,6 +20,7 @@ public class Recommender {
 
 	private static double[][] trainData;
 	private static double[][] testData;
+	private static int crossValidations = 1;
 
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListMovies = 0;
@@ -56,95 +57,113 @@ public class Recommender {
 			settings = new double[] { 1, 20, 50, 100, 200, 400, 800 };
 		}
 
-		// read-in training and test data
-		trainData = readData(fileDirectory + trainDataFile);
-		testData = readData(fileDirectory + testDataFile);
-
-		for (int n = 0; n < settings.length; n++) {
-			if (useThreshold) {
-				threshold = settings[n];
-			} else {
-				neighbourhoodSize = (int) settings[n];
-			}
-			// calculate the number of runs according to the used algorithms
-			int runs = 0;
-			for (int i = 0; i < predictors.length; i++) {
-				if (predictors[i].equals("userbased"))
-					runs += smetrics.length * pmetrics.length;
-				else if (predictors[i].equals("itembased"))
-					runs += smetrics.length * pmetrics.length;
-				else
-					runs++;
-			}
-
-			double[] predictiveErrors = new double[runs];
-			double[] runTimes = new double[runs];
-
-			int runCount = 0;
-
-			// calculate the actual predictions, predictive errors and run times
-			for (int i = 0; i < predictors.length; i++) {
-				if (predictors[i].toLowerCase().equals("userbased")
-						|| predictors[i].toLowerCase().equals("itembased")) {
-					for (int j = 0; j < smetrics.length; j++) {
-						for (int k = 0; k < pmetrics.length; k++) {
-							runTimes[runCount] = System.nanoTime();
-							predictiveErrors[runCount] = runTest(predictors[i],
-									smetrics[j], pmetrics[k], trainData,
-									testData);
-							runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
-									/ Math.pow(10, 9);
-							runCount++;
-						}
-					}
-				} else {
-					runTimes[runCount] = System.nanoTime();
-					predictiveErrors[runCount] = runTest(predictors[i],
-							smetrics[0], pmetrics[0], trainData, testData);
-					runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
-							/ Math.pow(10, 9);
-					runCount++;
-				}
-			}
-
-			// display results
-			System.out.println("========================================");
-			if (useThreshold)
-				System.out.println("Results for thresholdsize " + settings[n]
-						+ "\naverage neighbourhoodSize for Users: "
-						+ averageSizeOfSimilarityListUsers
-						+ "\naverage neighbourhoodSize for Movies: "
-						+ averageSizeOfSimilarityListMovies);
-			else
-				System.out.println("Results for neighbourhoodsize "
-						+ neighbourhoodSize);
-
-			System.out.println("========================================");
+		for (int c = 1; c <= crossValidations; c++) {
 
 			System.out
-					.println("Predictor \t\t Similarity metric \t Prediction metric \t RMSE \t\t Run Time (s)\n");
-			int displayCount = 0;
-			for (int i = 0; i < predictors.length; i++) {
-				if (predictors[i].toLowerCase().equals("userbased")
-						|| predictors[i].toLowerCase().equals("itembased")) {
-					for (int j = 0; j < smetrics.length; j++) {
-						for (int k = 0; k < pmetrics.length; k++) {
-							System.out.println(String.format(
-									"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
-									predictors[i], smetrics[j],
-									pmetrics[k].substring(0, 10),
-									predictiveErrors[displayCount],
-									runTimes[displayCount]));
-							displayCount++;
-						}
-					}
+					.println("================================================================================");
+			System.out.println("Data set: set" + c);
+			System.out
+					.println("================================================================================");
+
+			// only if cross-validation sets are used, the name of the files can
+			// be changed
+			if (c > 1) {
+				trainDataFile = "set" + c + ".base";
+				testDataFile = "set" + c + ".test";
+			}
+
+			// read-in training and test data
+			trainData = readData(fileDirectory + trainDataFile);
+			testData = readData(fileDirectory + testDataFile);
+
+			for (int n = 0; n < settings.length; n++) {
+				if (useThreshold) {
+					threshold = settings[n];
 				} else {
-					System.out.println(String.format(
-							"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
-							predictors[i], "--------------", "------------",
-							predictiveErrors[displayCount],
-							runTimes[displayCount]));
-					displayCount++;
+					neighbourhoodSize = (int) settings[n];
+				}
+				// calculate the number of runs according to the used algorithms
+				int runs = 0;
+				for (int i = 0; i < predictors.length; i++) {
+					if (predictors[i].equals("userbased"))
+						runs += smetrics.length * pmetrics.length;
+					else if (predictors[i].equals("itembased"))
+						runs += smetrics.length * pmetrics.length;
+					else
+						runs++;
+				}
+
+				double[] predictiveErrors = new double[runs];
+				double[] runTimes = new double[runs];
+
+				int runCount = 0;
+
+				// calculate the actual predictions, predictive errors and run
+				// times
+				for (int i = 0; i < predictors.length; i++) {
+					if (predictors[i].toLowerCase().equals("userbased")
+							|| predictors[i].toLowerCase().equals("itembased")) {
+						for (int j = 0; j < smetrics.length; j++) {
+							for (int k = 0; k < pmetrics.length; k++) {
+								runTimes[runCount] = System.nanoTime();
+								predictiveErrors[runCount] = runTest(
+										predictors[i], smetrics[j],
+										pmetrics[k], trainData, testData);
+								runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
+										/ Math.pow(10, 9);
+								runCount++;
+							}
+						}
+					} else {
+						runTimes[runCount] = System.nanoTime();
+						predictiveErrors[runCount] = runTest(predictors[i],
+								smetrics[0], pmetrics[0], trainData, testData);
+						runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
+								/ Math.pow(10, 9);
+						runCount++;
+					}
+				}
+
+				// display results
+				System.out.println("========================================");
+				if (useThreshold)
+					System.out.println("Results for thresholdsize "
+							+ settings[n]
+							+ "\naverage neighbourhoodSize for Users: "
+							+ averageSizeOfSimilarityListUsers
+							+ "\naverage neighbourhoodSize for Movies: "
+							+ averageSizeOfSimilarityListMovies);
+				else
+					System.out.println("Results for neighbourhoodsize "
+							+ neighbourhoodSize);
+
+				System.out.println("========================================");
+
+				System.out
+						.println("Predictor \t\t Similarity metric \t Prediction metric \t RMSE \t\t Run Time (s)\n");
+				int displayCount = 0;
+				for (int i = 0; i < predictors.length; i++) {
+					if (predictors[i].toLowerCase().equals("userbased")
+							|| predictors[i].toLowerCase().equals("itembased")) {
+						for (int j = 0; j < smetrics.length; j++) {
+							for (int k = 0; k < pmetrics.length; k++) {
+								System.out.println(String.format(
+										"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
+										predictors[i], smetrics[j],
+										pmetrics[k].substring(0, 10),
+										predictiveErrors[displayCount],
+										runTimes[displayCount]));
+								displayCount++;
+							}
+						}
+					} else {
+						System.out.println(String.format(
+								"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
+								predictors[i], "--------------",
+								"------------", predictiveErrors[displayCount],
+								runTimes[displayCount]));
+						displayCount++;
+					}
 				}
 			}
 		}
@@ -172,7 +191,8 @@ public class Recommender {
 		} else if (predictor.toLowerCase().equals("useraverage")) {
 			p = new UserAverageBasedPredictor();
 		} else if (predictor.toLowerCase().equals("userbased")) {
-			p = new UserBasedPredictor(neighbourhoodSize, smetric, pmetric);
+			p = new UserBasedPredictor(neighbourhoodSize, smetric, pmetric,
+					useThreshold);
 		} else if (predictor.toLowerCase().equals("itembased")) {
 			p = new ItemBasedPredictor(neighbourhoodSize, smetric, pmetric);
 		}
@@ -337,6 +357,10 @@ public class Recommender {
 
 	public static void setFileDirectory(String s) {
 		fileDirectory = s + "/";
+	}
+
+	public static void setCrossValidations(int n) {
+		crossValidations = n;
 	}
 
 	public static void setAverageSizeOfSimilarityListMovies(double size) {

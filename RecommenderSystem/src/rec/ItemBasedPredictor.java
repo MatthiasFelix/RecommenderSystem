@@ -109,6 +109,16 @@ public class ItemBasedPredictor extends Predictor {
 			}
 		}
 
+		// Calculate the average size of the similarity lists
+		int similaritiesCount = 0;
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : similarities
+				.entrySet()) {
+			similaritiesCount += entry.getValue().size();
+		}
+		Recommender
+				.setAverageSizeOfSimilarityListMovies((double) similaritiesCount
+						/ (double) similarities.size());
+
 		// sort the maps by decreasing similarity and take the N most similar
 		// users or all users with similarity above the threshold
 

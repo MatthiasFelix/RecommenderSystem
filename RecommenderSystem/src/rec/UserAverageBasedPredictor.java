@@ -21,6 +21,8 @@ public class UserAverageBasedPredictor extends Predictor {
 	// for every user a hashmap of movie ratings
 	private TreeMap<Integer, HashMap<Integer, Double>> UserMovieRatings;
 
+	private double average = 0;
+
 	public UserAverageBasedPredictor() {
 		UserRatedMovies = new HashMap<Integer, HashSet<Integer>>();
 		UserMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
@@ -38,6 +40,7 @@ public class UserAverageBasedPredictor extends Predictor {
 		initializeUserRatedMovies(data);
 
 		computeUserAverageRatings(data);
+		computeAverage();
 
 	}
 
@@ -49,7 +52,11 @@ public class UserAverageBasedPredictor extends Predictor {
 	 * @return: predicted rating
 	 */
 	public double predict(int userID, int movieID) {
-		return averageRatings.get(userID);
+		if (averageRatings.get(userID) != null) {
+			return averageRatings.get(userID);
+		} else {
+			return average;
+		}
 	}
 
 	/**
@@ -81,8 +88,8 @@ public class UserAverageBasedPredictor extends Predictor {
 	 */
 	public void initializeUserMovieRatings(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
-			if (UserMovieRatings.containsKey(data[i][0])) {
-				UserMovieRatings.get(data[i][0]).put((int) data[i][1],
+			if (UserMovieRatings.containsKey((int) data[i][0])) {
+				UserMovieRatings.get((int) data[i][0]).put((int) data[i][1],
 						data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
@@ -108,6 +115,13 @@ public class UserAverageBasedPredictor extends Predictor {
 			rating /= (double) UserRatedMovies.get(userID).size();
 			averageRatings.put(userID, rating);
 		}
+	}
+
+	public void computeAverage() {
+		for (Double avg : averageRatings.values()) {
+			average += avg;
+		}
+		average /= averageRatings.size();
 	}
 
 	public HashMap<Integer, HashSet<Integer>> getUserRatedMovies() {

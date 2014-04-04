@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,21 +23,11 @@ public class DataManipulator {
 
 		data = readData("lastfm-2k/user_artists.data");
 		initializeUserMovieRatings(data);
+
+		cleanDataSet();
+
 		normalizeRatings(userMovieRatings, 1, 5);
 		writeNormalizedData("lastfm-2k/user_artists_n.data");
-	}
-
-	public static void initializeUserMovieRatings(int[][] data) {
-		for (int i = 0; i < data.length; i++) {
-			if (userMovieRatings.containsKey(data[i][0])) {
-				userMovieRatings.get(data[i][0]).put(data[i][1],
-						(double) data[i][2]);
-			} else {
-				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
-				ratings.put(data[i][1], (double) data[i][2]);
-				userMovieRatings.put(data[i][0], ratings);
-			}
-		}
 	}
 
 	public static int[][] readData(String fileName) {
@@ -83,24 +75,48 @@ public class DataManipulator {
 		return data;
 	}
 
+	public static void initializeUserMovieRatings(int[][] data) {
+		for (int i = 0; i < data.length; i++) {
+			if (userMovieRatings.containsKey(data[i][0])) {
+				userMovieRatings.get(data[i][0]).put(data[i][1],
+						(double) data[i][2]);
+			} else {
+				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
+				ratings.put(data[i][1], (double) data[i][2]);
+				userMovieRatings.put(data[i][0], ratings);
+			}
+		}
+	}
+
+	public static void cleanDataSet() {
+		// Remove users that have the same rating for each item OR that have
+		// less than 10 ratings
+		ArrayList<Integer> usersToRemove = new ArrayList<Integer>();
+		for (Integer userID : userMovieRatings.keySet()) {
+			if (findMinimum(userMovieRatings.get(userID).values()) == findMaximum(userMovieRatings
+					.get(userID).values())) {
+				usersToRemove.add(userID);
+			} else if (userMovieRatings.get(userID).size() < 10) {
+				usersToRemove.add(userID);
+			}
+		}
+
+		for (Integer userID : usersToRemove) {
+			userMovieRatings.remove(userID);
+		}
+
+	}
+
 	public static void normalizeRatings(
 			TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings,
 			double minimum, double maximum) {
 
 		for (Integer userID : userMovieRatings.keySet()) {
 
-			double currentMin = Integer.MAX_VALUE;
-			double currentMax = Integer.MIN_VALUE;
-
-			// For each user, find his minimum and maximum rating
-			for (Double rating : userMovieRatings.get(userID).values()) {
-				if (rating < currentMin) {
-					currentMin = rating;
-				}
-				if (rating > currentMax) {
-					currentMax = rating;
-				}
-			}
+			double currentMin = findMinimum(userMovieRatings.get(userID)
+					.values());
+			double currentMax = findMaximum(userMovieRatings.get(userID)
+					.values());
 
 			// Normalize the ratings and put them back into the userMovieRatings
 			// hash map
@@ -125,6 +141,7 @@ public class DataManipulator {
 	}
 
 	public static void writeNormalizedData(String fileName) {
+
 		File file = new File(
 				"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
 						+ fileName);
@@ -148,4 +165,25 @@ public class DataManipulator {
 		}
 
 	}
+
+	private static double findMaximum(Collection<Double> ratings) {
+		double currentMax = Integer.MIN_VALUE;
+		for (Double rating : ratings) {
+			if (rating > currentMax) {
+				currentMax = rating;
+			}
+		}
+		return currentMax;
+	}
+
+	private static double findMinimum(Collection<Double> ratings) {
+		double currentMin = Integer.MAX_VALUE;
+		for (Double rating : ratings) {
+			if (rating < currentMin) {
+				currentMin = rating;
+			}
+		}
+		return currentMin;
+	}
+
 }

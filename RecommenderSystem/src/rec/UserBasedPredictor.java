@@ -18,6 +18,7 @@ public class UserBasedPredictor extends Predictor {
 
 	private int neighbourhoodSize;
 	private String sMetric, pMetric;
+	private boolean threshold;
 
 	// hash map: userID --> average rating the user has given
 	private HashMap<Integer, Double> averageRatings;
@@ -36,11 +37,12 @@ public class UserBasedPredictor extends Predictor {
 	private Comparator<Map.Entry<Integer, Double>> comparator;
 
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
-			String pMetric) {
+			String pMetric, boolean threshold) {
 
 		this.neighbourhoodSize = neighbourhoodSize;
 		this.sMetric = sMetric;
 		this.pMetric = pMetric;
+		this.threshold = threshold;
 
 		userRatedMovies = new TreeMap<Integer, HashSet<Integer>>();
 		userMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
@@ -79,50 +81,102 @@ public class UserBasedPredictor extends Predictor {
 
 				sim = computeSimilarity(user1, user2);
 
-				// this is for user1's list
-				if (similarities.containsKey(user1)) {
-					LinkedHashMap<Integer, Double> s = similarities.get(user1);
-					s.put(user2, sim);
+				// If threshold is used, only put similarities above the
+				// threshold into the hash map
+				if (threshold) {
+					if (sim < Recommender.getThreshold()) {
+						continue;
+					}
 				} else {
-					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-					s.put(user2, sim);
-					similarities.put(user1, s);
+					// Add similarity to neighbourhood only if it's big enough
+
+					// User1's list
+					if (similarities.containsKey(user1)) {
+						if (similarities.get(user1).size() < neighbourhoodSize) {
+							LinkedHashMap<Integer, Double> s = similarities
+									.get(user1);
+							s.put(user2, sim);
+						} else {
+							int userToReplace = 0;
+							for (Map.Entry<Integer, Double> entry : similarities
+									.get(user1).entrySet()) {
+								if (sim > entry.getValue()) {
+									userToReplace = entry.getKey();
+								}
+							}
+							if (userToReplace != 0) {
+								similarities.get(user1).remove(userToReplace);
+								similarities.get(user1).put(user2, sim);
+							}
+						}
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user2, sim);
+						similarities.put(user1, s);
+					}
+
+					// User2's list
+					if (similarities.containsKey(user2)) {
+						if (similarities.get(user2).size() < neighbourhoodSize) {
+							LinkedHashMap<Integer, Double> s = similarities
+									.get(user2);
+							s.put(user1, sim);
+						} else {
+							int userToReplace = 0;
+							for (Map.Entry<Integer, Double> entry : similarities
+									.get(user2).entrySet()) {
+								if (sim > entry.getValue()) {
+									userToReplace = entry.getKey();
+								}
+							}
+							similarities.get(user2).remove(userToReplace);
+							similarities.get(user2).put(user1, sim);
+						}
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user1, sim);
+						similarities.put(user2, s);
+					}
 				}
 
-				// this is for user2's list
-				if (similarities.containsKey(user2)) {
-					HashMap<Integer, Double> s = similarities.get(user2);
-					s.put(user1, sim);
-				} else {
-					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-					s.put(user1, sim);
-					similarities.put(user2, s);
-				}
 			}
 		}
+
+		// Calculate the average size of the similarity lists
+		int similaritiesCount = 0;
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : similarities
+				.entrySet()) {
+			similaritiesCount += entry.getValue().size();
+		}
+		Recommender
+				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
+						/ (double) similarities.size());
 
 		// sort the similarities by decreasing similarity and take the N
 		// most similar users
-		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : similarities
-				.entrySet()) {
-			ArrayList<Entry<Integer, Double>> list = new ArrayList<Entry<Integer, Double>>(
-					entry.getValue().entrySet());
-
-			Collections.sort(list, Collections.reverseOrder(comparator));
-
-			// take N most similar users
-			LinkedHashMap<Integer, Double> m = new LinkedHashMap<Integer, Double>();
-			int count = 0;
-			for (Entry<Integer, Double> e : list) {
-				if (count == neighbourhoodSize)
-					break;
-				m.put(e.getKey(), e.getValue());
-				count++;
-			}
-			// replace current map with the map with most similar users
-			similarities.put(entry.getKey(), m);
-
-		}
+		// for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry :
+		// similarities
+		// .entrySet()) {
+		// ArrayList<Entry<Integer, Double>> list = new ArrayList<Entry<Integer,
+		// Double>>(
+		// entry.getValue().entrySet());
+		//
+		// Collections.sort(list, Collections.reverseOrder(comparator));
+		//
+		// // take N most similar users
+		// LinkedHashMap<Integer, Double> m = new LinkedHashMap<Integer,
+		// Double>();
+		// int count = 0;
+		// for (Entry<Integer, Double> e : list) {
+		// if (count == neighbourhoodSize)
+		// break;
+		// m.put(e.getKey(), e.getValue());
+		// count++;
+		// }
+		// // replace current map with the map with most similar users
+		// similarities.put(entry.getKey(), m);
+		//
+		// }
 
 	}
 
@@ -139,11 +193,17 @@ public class UserBasedPredictor extends Predictor {
 	@Override
 	public double predict(int userID, int movieID) {
 
+		// If the user hasn't rated any movie yet, return 0
 		if (!userMovieRatings.keySet().contains(userID)) {
 			return 0;
 		}
 
 		double prediction = averageRatings.get(userID);
+
+		// If there are no similarities stored, return the user's average
+		if (similarities.get(userID) == null) {
+			return prediction;
+		}
 
 		ArrayList<Double> similaritiesList = new ArrayList<Double>();
 		ArrayList<Double> ratingsList = new ArrayList<Double>();
@@ -172,6 +232,7 @@ public class UserBasedPredictor extends Predictor {
 		}
 
 		if (prediction == 0) {
+			// System.out.println("Returning average");
 			return averageRatings.get(userID);
 		}
 
