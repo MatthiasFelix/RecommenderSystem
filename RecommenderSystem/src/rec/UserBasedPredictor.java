@@ -1,13 +1,10 @@
 package rec;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 /**
@@ -33,8 +30,11 @@ public class UserBasedPredictor extends Predictor {
 	 * same iteration order)
 	 */
 	private TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings;
-	// needed to sort the neighbour lists by similarity
-	private Comparator<Map.Entry<Integer, Double>> comparator;
+
+	/*
+	 * hash map: userID --> Set of users that are friends of this user
+	 */
+	private TreeMap<Integer, HashSet<Integer>> userFriends;
 
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
 			String pMetric, boolean threshold) {
@@ -49,12 +49,6 @@ public class UserBasedPredictor extends Predictor {
 		averageRatings = new HashMap<Integer, Double>();
 		similarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
 
-		comparator = new Comparator<Map.Entry<Integer, Double>>() {
-			public int compare(Map.Entry<Integer, Double> o1,
-					Map.Entry<Integer, Double> o2) {
-				return (o1.getValue()).compareTo(o2.getValue());
-			}
-		};
 	}
 
 	/**
@@ -87,6 +81,28 @@ public class UserBasedPredictor extends Predictor {
 					if (sim < Recommender.getThreshold()) {
 						continue;
 					}
+
+					// this is for user1's list
+					if (similarities.containsKey(user1)) {
+						LinkedHashMap<Integer, Double> s = similarities
+								.get(user1);
+						s.put(user2, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user2, sim);
+						similarities.put(user1, s);
+					}
+
+					// this is for user2's list
+					if (similarities.containsKey(user2)) {
+						HashMap<Integer, Double> s = similarities.get(user2);
+						s.put(user1, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user1, sim);
+						similarities.put(user2, s);
+					}
+
 				} else {
 					// Add similarity to neighbourhood only if it's big enough
 
@@ -151,32 +167,6 @@ public class UserBasedPredictor extends Predictor {
 		Recommender
 				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
 						/ (double) similarities.size());
-
-		// sort the similarities by decreasing similarity and take the N
-		// most similar users
-		// for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry :
-		// similarities
-		// .entrySet()) {
-		// ArrayList<Entry<Integer, Double>> list = new ArrayList<Entry<Integer,
-		// Double>>(
-		// entry.getValue().entrySet());
-		//
-		// Collections.sort(list, Collections.reverseOrder(comparator));
-		//
-		// // take N most similar users
-		// LinkedHashMap<Integer, Double> m = new LinkedHashMap<Integer,
-		// Double>();
-		// int count = 0;
-		// for (Entry<Integer, Double> e : list) {
-		// if (count == neighbourhoodSize)
-		// break;
-		// m.put(e.getKey(), e.getValue());
-		// count++;
-		// }
-		// // replace current map with the map with most similar users
-		// similarities.put(entry.getKey(), m);
-		//
-		// }
 
 	}
 

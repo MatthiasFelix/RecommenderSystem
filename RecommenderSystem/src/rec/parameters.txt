@@ -9,10 +9,10 @@ loglevel default
 dataset lastfm-2k
 
 #training data (e.g. ua.base)
-traindata set1.base
+traindata set3.base
 
 #test data (e.g. ua.test)
-testdata set1.test
+testdata set3.test
 
 #number of crossvalidations
 crossvalidations 1
@@ -24,7 +24,7 @@ threshold false
 neighbourhoodsize 500
 
 #predictor algorithms (averagebased, useraverage, userbased, itembased)
-predictors userbased
+predictors itembased
 
 #similarity metrics (cosine, pearson)
 smetrics cosine pearson

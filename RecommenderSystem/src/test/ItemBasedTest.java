@@ -20,7 +20,7 @@ public class ItemBasedTest {
 	public void testItemBasedPredictor() {
 
 		ItemBasedPredictor p = new ItemBasedPredictor(20, "cosine",
-				"weightedsum");
+				"weightedsum", false);
 		p.train(trainData);
 
 		// Test cosine similarities between all movies

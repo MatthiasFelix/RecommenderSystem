@@ -54,7 +54,8 @@ public class Recommender {
 			settings = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
 					0.9, 1 };
 		} else {
-			settings = new double[] { 1, 20, 50, 100, 200, 400, 800 };
+			settings = new double[] { 1, 20, 50, 100, 200, 400, 800, 1500,
+					2000, 3000 };
 		}
 
 		for (int c = 1; c <= crossValidations; c++) {
@@ -194,7 +195,8 @@ public class Recommender {
 			p = new UserBasedPredictor(neighbourhoodSize, smetric, pmetric,
 					useThreshold);
 		} else if (predictor.toLowerCase().equals("itembased")) {
-			p = new ItemBasedPredictor(neighbourhoodSize, smetric, pmetric);
+			p = new ItemBasedPredictor(neighbourhoodSize, smetric, pmetric,
+					useThreshold);
 		}
 
 		// train the predictor
