@@ -22,6 +22,9 @@ public class Recommender {
 	private static double[][] testData;
 	private static int crossValidations = 1;
 
+	private static int[][] userFriends;
+	private static String[] socialNeighbourhood = { "all" };
+
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListMovies = 0;
 
@@ -49,13 +52,16 @@ public class Recommender {
 
 		ParseInput.setParameters(parameterFile);
 
+		userFriends = fillFriendsList(fileDirectory + "user_friends.txt");
+
 		// Assign the parameters for the different test runs
 		if (useThreshold) {
 			settings = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
 					0.9, 1 };
 		} else {
-			settings = new double[] { 1, 20, 50, 100, 200, 400, 800, 1500,
-					2000, 3000 };
+			// settings = new double[] { 1, 20, 50, 100, 200, 400, 800, 1500,
+			// 2000, 3000 };
+			settings = new double[] { 1 };
 		}
 
 		for (int c = 1; c <= crossValidations; c++) {
@@ -90,6 +96,8 @@ public class Recommender {
 						runs += smetrics.length * pmetrics.length;
 					else if (predictors[i].equals("itembased"))
 						runs += smetrics.length * pmetrics.length;
+					else if (predictors[i].equals("socialuserbased"))
+						runs += smetrics.length * socialNeighbourhood.length;
 					else
 						runs++;
 				}
@@ -109,7 +117,20 @@ public class Recommender {
 								runTimes[runCount] = System.nanoTime();
 								predictiveErrors[runCount] = runTest(
 										predictors[i], smetrics[j],
-										pmetrics[k], trainData, testData);
+										pmetrics[k], "", trainData, testData);
+								runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
+										/ Math.pow(10, 9);
+								runCount++;
+							}
+						}
+					} else if (predictors[i].equals("socialuserbased")) {
+						for (int j = 0; j < smetrics.length; j++) {
+							for (int k = 0; k < socialNeighbourhood.length; k++) {
+								runTimes[runCount] = System.nanoTime();
+								predictiveErrors[runCount] = runTest(
+										predictors[i], smetrics[j],
+										"adjustedsum", socialNeighbourhood[k],
+										trainData, testData);
 								runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
 										/ Math.pow(10, 9);
 								runCount++;
@@ -118,7 +139,8 @@ public class Recommender {
 					} else {
 						runTimes[runCount] = System.nanoTime();
 						predictiveErrors[runCount] = runTest(predictors[i],
-								smetrics[0], pmetrics[0], trainData, testData);
+								smetrics[0], pmetrics[0], "", trainData,
+								testData);
 						runTimes[runCount] = (System.nanoTime() - runTimes[runCount])
 								/ Math.pow(10, 9);
 						runCount++;
@@ -183,9 +205,12 @@ public class Recommender {
 	 * @return root mean square error of the predictions
 	 */
 	public static double runTest(String predictor, String smetric,
-			String pmetric, double[][] trainData, double[][] testData) {
+			String pmetric, String socialNeighbourhood, double[][] trainData,
+			double[][] testData) {
 
 		Predictor p = null;
+
+		System.out.println("social Neighbourhood:" + socialNeighbourhood);
 
 		if (predictor.toLowerCase().equals("averagebased")) {
 			p = new AverageBasedPredictor();
@@ -197,6 +222,9 @@ public class Recommender {
 		} else if (predictor.toLowerCase().equals("itembased")) {
 			p = new ItemBasedPredictor(neighbourhoodSize, smetric, pmetric,
 					useThreshold);
+		} else if (predictor.equals("socialuserbased")) {
+			p = new SocialUserBasedPredictor(userFriends, smetric,
+					"adjustedsum", socialNeighbourhood);
 		}
 
 		// train the predictor
@@ -293,6 +321,44 @@ public class Recommender {
 		return data;
 	}
 
+	public static int[][] fillFriendsList(String fileName) {
+
+		int[][] friendsList = null;
+
+		try {
+
+			// Count the number of friend relations
+			BufferedReader b = new BufferedReader(new FileReader(fileName));
+			int N = 0;
+			while (b.readLine() != null) {
+				N++;
+			}
+			b.close();
+
+			friendsList = new int[N][2];
+
+			// Fill the list with all friends relations
+
+			b = new BufferedReader(new FileReader(fileName));
+
+			for (int i = 0; i < N; i++) {
+				String[] s = b.readLine().split("\t");
+				try {
+					friendsList[i][0] = new Integer(s[0]);
+					friendsList[i][1] = new Integer(s[1]);
+				} catch (NumberFormatException nfe) {
+					System.err.println("input data must be of type integer.");
+					nfe.printStackTrace();
+				}
+			}
+
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+
+		return friendsList;
+	}
+
 	public static int getNeighbourhoodSize() {
 		return neighbourhoodSize;
 	}
@@ -363,6 +429,10 @@ public class Recommender {
 
 	public static void setCrossValidations(int n) {
 		crossValidations = n;
+	}
+
+	public static void setSocialNeighbourhood(String[] s) {
+		socialNeighbourhood = s;
 	}
 
 	public static void setAverageSizeOfSimilarityListMovies(double size) {

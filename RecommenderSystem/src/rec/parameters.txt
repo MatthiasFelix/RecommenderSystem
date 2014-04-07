@@ -9,13 +9,13 @@ loglevel default
 dataset lastfm-2k
 
 #training data (e.g. ua.base)
-traindata set3.base
+traindata set1.base
 
 #test data (e.g. ua.test)
-testdata set3.test
+testdata set1.test
 
 #number of crossvalidations
-crossvalidations 1
+crossvalidations 5
 
 #use threshold instead of neighbourhood
 threshold false
@@ -23,11 +23,14 @@ threshold false
 #size of the neighbourhood
 neighbourhoodsize 500
 
-#predictor algorithms (averagebased, useraverage, userbased, itembased)
-predictors itembased
+#predictor algorithms (averagebased, useraverage, userbased, itembased, socialuserbased)
+predictors socialuserbased
 
 #similarity metrics (cosine, pearson)
 smetrics cosine pearson
 
 #prediction metrics (weightedsum, adjustedsum, adjustedweightedsum)
 pmetrics adjustedweightedsum
+
+#social neighbourhood (all, similar, friendsoffriends)
+socialNeighbourhood all friendsoffriends

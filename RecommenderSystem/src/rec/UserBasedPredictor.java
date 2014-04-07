@@ -31,11 +31,6 @@ public class UserBasedPredictor extends Predictor {
 	 */
 	private TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings;
 
-	/*
-	 * hash map: userID --> Set of users that are friends of this user
-	 */
-	private TreeMap<Integer, HashSet<Integer>> userFriends;
-
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
 			String pMetric, boolean threshold) {
 
@@ -231,7 +226,7 @@ public class UserBasedPredictor extends Predictor {
 	}
 
 	/**
-	 * Computes the similarity between user1 and user2 using the Pearson
+	 * Computes the similarity between user1 and user2 using the specified
 	 * similarity coefficient
 	 * 
 	 * @param user1

@@ -21,6 +21,7 @@ public class ParseInput {
 	private static final String threshold = "threshold";
 	private static final String dataset = "dataset";
 	private static final String crossvalidations = "crossvalidations";
+	private static final String socialNeighbourhood = "socialNeighbourhood";
 
 	public static void setParameters(String fileName) {
 
@@ -97,6 +98,15 @@ public class ParseInput {
 				else if (line.contains(crossvalidations)) {
 					s = line.split(" ");
 					Recommender.setCrossValidations(Integer.parseInt(s[1]));
+				}
+
+				else if (line.contains(socialNeighbourhood)) {
+					s = line.split(" ");
+					String[] socialN = new String[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						socialN[i - 1] = s[i];
+					}
+					Recommender.setSocialNeighbourhood(socialN);
 				}
 
 				else if (line.contains(loglevel)) {
