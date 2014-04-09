@@ -20,7 +20,6 @@ public class ParseInput {
 	private static final String pmetrics = "pmetrics";
 	private static final String threshold = "threshold";
 	private static final String dataset = "dataset";
-	private static final String crossvalidations = "crossvalidations";
 	private static final String socialNeighbourhood = "socialNeighbourhood";
 
 	public static void setParameters(String fileName) {
@@ -36,12 +35,20 @@ public class ParseInput {
 
 				else if (line.contains(traindata)) {
 					s = line.split(" ");
-					Recommender.setTrainDataFile(s[1]);
+					String[] data = new String[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						data[i - 1] = s[i];
+					}
+					Recommender.setTrainDataFiles(data);
 				}
 
 				else if (line.contains(testdata)) {
 					s = line.split(" ");
-					Recommender.setTestDataFile(s[1]);
+					String[] data = new String[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						data[i - 1] = s[i];
+					}
+					Recommender.setTestDataFiles(data);
 				}
 
 				else if (line.contains(neighbourhoodsize)) {
@@ -93,11 +100,6 @@ public class ParseInput {
 				else if (line.contains(dataset)) {
 					s = line.split(" ");
 					Recommender.setFileDirectory(s[1]);
-				}
-
-				else if (line.contains(crossvalidations)) {
-					s = line.split(" ");
-					Recommender.setCrossValidations(Integer.parseInt(s[1]));
 				}
 
 				else if (line.contains(socialNeighbourhood)) {

@@ -8,36 +8,38 @@ import java.io.IOException;
 /**
  * This is the main class of the recommender package. It reads the parameter
  * file, runs the specified predictors and computes the predictive errors. All
- * parameters should be specified using the parameterFile "parameters.txt"
+ * parameters should be specified using the parameter file "parameters.txt"
  */
 public class Recommender {
 
+	private static String parameterFile = "src/rec/parameters.txt";
+
 	// default settings
 	private static int neighbourhoodSize = 20;
-	private static double threshold;
 	private static boolean useThreshold = false;
-	private static double[] settings = new double[10];
-
-	private static double[][] trainData;
-	private static double[][] testData;
-	private static int crossValidations = 1;
-
-	private static int[][] userFriends;
-	private static String[] socialNeighbourhood = { "all" };
-
-	private static double averageSizeOfSimilarityListUsers = 0;
-	private static double averageSizeOfSimilarityListMovies = 0;
-
+	private static double threshold;
 	private static String fileDirectory = "lastfm-2k/";
-	private static String trainDataFile = "ua.base";
-	private static String testDataFile = "ua.test";
-	private static String parameterFile = "src/rec/parameters.txt";
-	private static String[] predictors = { "AverageBased" };
-	private static String[] smetrics = { "cosinesimilarity" };
-	private static String[] pmetrics = { "average" };
+	private static String[] trainDataFiles = { "set1.base" };
+	private static String[] testDataFiles = { "set1.test" };
+	private static String friendsDataFile = "user_friends.txt";
+	private static String[] predictors = { "userbased" };
+	private static String[] smetrics = { "cosine" };
+	private static String[] pmetrics = { "adjustedweightedsum" };
+	private static String[] socialNeighbourhood = { "all" };
 
 	private static final boolean DEBUG = true;
 	private static boolean logLevel = !DEBUG;
+
+	// 2D arrays to store the data from the input files
+	private static double[][] trainData;
+	private static double[][] testData;
+	private static int[][] userFriends;
+
+	private static double[] settings = new double[10];
+
+	// average neighbourhoodSizes when threshold is used
+	private static double averageSizeOfSimilarityListUsers = 0;
+	private static double averageSizeOfSimilarityListMovies = 0;
 
 	/**
 	 * The main function sets the parameters, runs read the training and test
@@ -47,48 +49,54 @@ public class Recommender {
 	 *            (not needed)
 	 */
 	public static void main(String[] args) {
-		// set the parameters. unless the parameter is mentioned in the text
-		// file, the default is set
 
+		// set the parameters. Unless the parameter is mentioned in the text
+		// file, the default is set
 		ParseInput.setParameters(parameterFile);
 
-		userFriends = fillFriendsList(fileDirectory + "user_friends.txt");
+		if (trainDataFiles.length != testDataFiles.length) {
+			System.err
+					.println("The number of train and test files must be equal.");
+			System.exit(-1);
+		}
+
+		// Read the file with the friends relations
+		userFriends = fillFriendsList(fileDirectory + friendsDataFile);
 
 		// Assign the parameters for the different test runs
 		if (useThreshold) {
-			settings = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8,
-					0.9, 1 };
+			settings = new double[] { 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,
+					0.8, 0.9, 1 };
 		} else {
 			// settings = new double[] { 1, 20, 50, 100, 200, 400, 800, 1500,
 			// 2000, 3000 };
 			settings = new double[] { 1 };
 		}
 
-		for (int c = 1; c <= crossValidations; c++) {
+		// Run the tests for all sets of .base and .test files
+		for (int c = 0; c < trainDataFiles.length; c++) {
 
 			System.out
 					.println("================================================================================");
-			System.out.println("Data set: set" + c);
+			System.out.println("Training set: " + trainDataFiles[c]);
+			System.out.println("Test set: " + testDataFiles[c]);
 			System.out
 					.println("================================================================================");
-
-			// only if cross-validation sets are used, the name of the files can
-			// be changed
-			if (c > 1) {
-				trainDataFile = "set" + c + ".base";
-				testDataFile = "set" + c + ".test";
-			}
 
 			// read-in training and test data
-			trainData = readData(fileDirectory + trainDataFile);
-			testData = readData(fileDirectory + testDataFile);
+			trainData = readData(fileDirectory + trainDataFiles[c]);
+			testData = readData(fileDirectory + testDataFiles[c]);
 
+			// Run the test with each specified setting (either threshold or
+			// neighbourhoodSize) in settings[]
 			for (int n = 0; n < settings.length; n++) {
+
 				if (useThreshold) {
 					threshold = settings[n];
 				} else {
 					neighbourhoodSize = (int) settings[n];
 				}
+
 				// calculate the number of runs according to the used algorithms
 				int runs = 0;
 				for (int i = 0; i < predictors.length; i++) {
@@ -110,8 +118,8 @@ public class Recommender {
 				// calculate the actual predictions, predictive errors and run
 				// times
 				for (int i = 0; i < predictors.length; i++) {
-					if (predictors[i].toLowerCase().equals("userbased")
-							|| predictors[i].toLowerCase().equals("itembased")) {
+					if (predictors[i].equals("userbased")
+							|| predictors[i].equals("itembased")) {
 						for (int j = 0; j < smetrics.length; j++) {
 							for (int k = 0; k < pmetrics.length; k++) {
 								runTimes[runCount] = System.nanoTime();
@@ -166,14 +174,26 @@ public class Recommender {
 						.println("Predictor \t\t Similarity metric \t Prediction metric \t RMSE \t\t Run Time (s)\n");
 				int displayCount = 0;
 				for (int i = 0; i < predictors.length; i++) {
-					if (predictors[i].toLowerCase().equals("userbased")
-							|| predictors[i].toLowerCase().equals("itembased")) {
+					if (predictors[i].equals("userbased")
+							|| predictors[i].equals("itembased")) {
 						for (int j = 0; j < smetrics.length; j++) {
 							for (int k = 0; k < pmetrics.length; k++) {
 								System.out.println(String.format(
 										"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
 										predictors[i], smetrics[j],
 										pmetrics[k].substring(0, 10),
+										predictiveErrors[displayCount],
+										runTimes[displayCount]));
+								displayCount++;
+							}
+						}
+					} else if (predictors[i].equals("socialuserbased")) {
+						for (int j = 0; j < smetrics.length; j++) {
+							for (int k = 0; k < socialNeighbourhood.length; k++) {
+								System.out.println(String.format(
+										"%s \t\t %s \t %s \t\t %.5f \t %.3f\n",
+										predictors[i], smetrics[j],
+										"adjustedsum".substring(0, 10),
 										predictiveErrors[displayCount],
 										runTimes[displayCount]));
 								displayCount++;
@@ -212,14 +232,14 @@ public class Recommender {
 
 		System.out.println("social Neighbourhood:" + socialNeighbourhood);
 
-		if (predictor.toLowerCase().equals("averagebased")) {
+		if (predictor.equals("averagebased")) {
 			p = new AverageBasedPredictor();
-		} else if (predictor.toLowerCase().equals("useraverage")) {
+		} else if (predictor.equals("useraverage")) {
 			p = new UserAverageBasedPredictor();
-		} else if (predictor.toLowerCase().equals("userbased")) {
+		} else if (predictor.equals("userbased")) {
 			p = new UserBasedPredictor(neighbourhoodSize, smetric, pmetric,
 					useThreshold);
-		} else if (predictor.toLowerCase().equals("itembased")) {
+		} else if (predictor.equals("itembased")) {
 			p = new ItemBasedPredictor(neighbourhoodSize, smetric, pmetric,
 					useThreshold);
 		} else if (predictor.equals("socialuserbased")) {
@@ -368,19 +388,19 @@ public class Recommender {
 	}
 
 	public static void setLoglevel(String log) {
-		if (log.toLowerCase().equals("default")) {
+		if (log.equals("default")) {
 			logLevel = !DEBUG;
-		} else if (log.toLowerCase().equals("debug")) {
+		} else if (log.equals("debug")) {
 			logLevel = DEBUG;
 		}
 	}
 
-	public static void setTrainDataFile(String trainDataFile) {
-		Recommender.trainDataFile = trainDataFile;
+	public static void setTrainDataFiles(String[] trainDataFiles) {
+		Recommender.trainDataFiles = trainDataFiles;
 	}
 
-	public static void setTestDataFile(String testDataFile) {
-		Recommender.testDataFile = testDataFile;
+	public static void setTestDataFiles(String[] testDataFiles) {
+		Recommender.testDataFiles = testDataFiles;
 	}
 
 	public static void setPredictors(String[] predictors) {
@@ -395,12 +415,12 @@ public class Recommender {
 		Recommender.pmetrics = pmetrics;
 	}
 
-	public static String getTrainDataFile() {
-		return trainDataFile;
+	public static String[] getTrainDataFiles() {
+		return trainDataFiles;
 	}
 
-	public static String getTestDataFile() {
-		return testDataFile;
+	public static String[] getTestDataFiles() {
+		return testDataFiles;
 	}
 
 	public static String[] getPredictors() {
@@ -425,10 +445,6 @@ public class Recommender {
 
 	public static void setFileDirectory(String s) {
 		fileDirectory = s + "/";
-	}
-
-	public static void setCrossValidations(int n) {
-		crossValidations = n;
 	}
 
 	public static void setSocialNeighbourhood(String[] s) {

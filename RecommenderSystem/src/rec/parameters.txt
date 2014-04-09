@@ -2,20 +2,17 @@
 #The parameter file for the auction simulator
 #############################################
 
-#Log-level: default or debug (gives more information)
+#Log-level (default or debug (gives more information))
 loglevel default
 
 #data set (lastfm-2k or ml-100k)
 dataset lastfm-2k
 
-#training data (e.g. ua.base)
-traindata set1.base
+#training data (e.g. ua.base) (list of all training sets to be used)
+traindata set1.base set2.base
 
-#test data (e.g. ua.test)
-testdata set1.test
-
-#number of crossvalidations
-crossvalidations 5
+#test data (e.g. ua.test) (list of all test sets to be used)
+testdata set1.test set2.test
 
 #use threshold instead of neighbourhood
 threshold false
@@ -27,10 +24,10 @@ neighbourhoodsize 500
 predictors socialuserbased
 
 #similarity metrics (cosine, pearson)
-smetrics cosine pearson
+smetrics pearson
 
 #prediction metrics (weightedsum, adjustedsum, adjustedweightedsum)
 pmetrics adjustedweightedsum
 
 #social neighbourhood (all, similar, friendsoffriends)
-socialNeighbourhood all friendsoffriends
+socialNeighbourhood all
