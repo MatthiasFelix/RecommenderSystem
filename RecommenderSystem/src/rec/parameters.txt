@@ -9,25 +9,28 @@ loglevel default
 dataset lastfm-2k
 
 #training data (e.g. ua.base) (list of all training sets to be used)
-traindata set1.base set2.base
+traindata set4.base
 
 #test data (e.g. ua.test) (list of all test sets to be used)
-testdata set1.test set2.test
+testdata set4.test
 
-#use threshold instead of neighbourhood
-threshold false
+#neighbourhood (size, threshold)
+neighbourhood threshold
 
-#size of the neighbourhood
-neighbourhoodsize 500
+#neighbourhoodSizes
+nsizes 1 20 50 100 200 400 800 1500 2000
 
-#predictor algorithms (averagebased, useraverage, userbased, itembased, socialuserbased)
-predictors socialuserbased
+#thresholds
+thresholds 0 0.2 0.4 0.6 0.8 1
+
+#predictor algorithms (averagebased, useraverage, userbased, itembased, socialuser)
+predictors itembased
 
 #similarity metrics (cosine, pearson)
-smetrics pearson
+smetrics pearson cosine
 
-#prediction metrics (weightedsum, adjustedsum, adjustedweightedsum)
-pmetrics adjustedweightedsum
+#prediction metrics (weighted, adjusted, adjweighted)
+pmetrics adjweighted
 
 #social neighbourhood (all, similar, friendsoffriends)
-socialNeighbourhood all
+socialneighbourhood all

@@ -2,10 +2,8 @@ package rec;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * This class implements the user-based collaborative filtering algorithm
@@ -13,36 +11,37 @@ import java.util.TreeMap;
  */
 public class UserBasedPredictor extends Predictor {
 
-	private int neighbourhoodSize;
-	private String sMetric, pMetric;
-	private boolean threshold;
+	private Data data;
+	private String neighbourhood, sMetric, pMetric;
+	private int size;
+	private double threshold;
 
-	// hash map: userID --> average rating the user has given
-	private HashMap<Integer, Double> averageRatings;
 	// hash map: userID --> hash map: userID --> similarity
-	private HashMap<Integer, LinkedHashMap<Integer, Double>> similarities;
-	// hash map: userID --> Set of movies that the user has rated
-	// note that this map is sorted (==> has always the same iteration order)
-	private TreeMap<Integer, HashSet<Integer>> userRatedMovies;
-	/*
-	 * hash map: userID --> hash map: movieID --> rating. For every user a hash
-	 * map of movie ratings note that this map is sorted (==> has always the
-	 * same iteration order)
-	 */
-	private TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings;
+	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
+	// Depending on which constructor is used, the algorithm runs with either a
+	// neighbourhood size or a threshold
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
-			String pMetric, boolean threshold) {
-
-		this.neighbourhoodSize = neighbourhoodSize;
+			String pMetric, Data d) {
+		this.data = d;
+		this.neighbourhood = "size";
+		this.size = neighbourhoodSize;
 		this.sMetric = sMetric;
 		this.pMetric = pMetric;
-		this.threshold = threshold;
 
-		userRatedMovies = new TreeMap<Integer, HashSet<Integer>>();
-		userMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
-		averageRatings = new HashMap<Integer, Double>();
-		similarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
+		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
+
+	}
+
+	public UserBasedPredictor(double threshold, String sMetric, String pMetric,
+			Data d) {
+		this.data = d;
+		this.neighbourhood = "threshold";
+		this.threshold = threshold;
+		this.sMetric = sMetric;
+		this.pMetric = pMetric;
+
+		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
 
 	}
 
@@ -54,99 +53,97 @@ public class UserBasedPredictor extends Predictor {
 	 *            : an array of triples (user, movie, rating)
 	 */
 	@Override
-	public void train(double[][] data) {
-
-		initializeUserMovieRatings(data);
-		initializeUserRatedMovies(data);
-
-		computeUserAverageRatings(data);
+	public void train() {
 
 		// Compute all pairs similarity between users and add them to the
 		// hash map similarities
 
 		double sim = 0;
-		for (Integer user1 : userRatedMovies.keySet()) {
-			for (Integer user2 : userRatedMovies.tailMap(user1, false).keySet()) {
+		for (Integer user1 : data.getMoviesByUser().keySet()) {
+			for (Integer user2 : data.getMoviesByUser().tailMap(user1, false)
+					.keySet()) {
 
 				sim = computeSimilarity(user1, user2);
 
 				// If threshold is used, only put similarities above the
 				// threshold into the hash map
-				if (threshold) {
-					if (sim < Recommender.getThreshold()) {
+				if (neighbourhood.equals("threshold")) {
+					if (sim < threshold) {
 						continue;
 					}
 
 					// this is for user1's list
-					if (similarities.containsKey(user1)) {
-						LinkedHashMap<Integer, Double> s = similarities
+					if (userSimilarities.containsKey(user1)) {
+						LinkedHashMap<Integer, Double> s = userSimilarities
 								.get(user1);
 						s.put(user2, sim);
 					} else {
 						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
 						s.put(user2, sim);
-						similarities.put(user1, s);
+						userSimilarities.put(user1, s);
 					}
 
 					// this is for user2's list
-					if (similarities.containsKey(user2)) {
-						HashMap<Integer, Double> s = similarities.get(user2);
+					if (userSimilarities.containsKey(user2)) {
+						HashMap<Integer, Double> s = userSimilarities
+								.get(user2);
 						s.put(user1, sim);
 					} else {
 						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
 						s.put(user1, sim);
-						similarities.put(user2, s);
+						userSimilarities.put(user2, s);
 					}
 
-				} else {
+				} else if (neighbourhood.equals("size")) {
 					// Add similarity to neighbourhood only if it's big enough
 
 					// User1's list
-					if (similarities.containsKey(user1)) {
-						if (similarities.get(user1).size() < neighbourhoodSize) {
-							LinkedHashMap<Integer, Double> s = similarities
+					if (userSimilarities.containsKey(user1)) {
+						if (userSimilarities.get(user1).size() < size) {
+							LinkedHashMap<Integer, Double> s = userSimilarities
 									.get(user1);
 							s.put(user2, sim);
 						} else {
 							int userToReplace = 0;
-							for (Map.Entry<Integer, Double> entry : similarities
+							for (Map.Entry<Integer, Double> entry : userSimilarities
 									.get(user1).entrySet()) {
 								if (sim > entry.getValue()) {
 									userToReplace = entry.getKey();
 								}
 							}
 							if (userToReplace != 0) {
-								similarities.get(user1).remove(userToReplace);
-								similarities.get(user1).put(user2, sim);
+								userSimilarities.get(user1).remove(
+										userToReplace);
+								userSimilarities.get(user1).put(user2, sim);
 							}
 						}
 					} else {
 						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
 						s.put(user2, sim);
-						similarities.put(user1, s);
+						userSimilarities.put(user1, s);
 					}
 
 					// User2's list
-					if (similarities.containsKey(user2)) {
-						if (similarities.get(user2).size() < neighbourhoodSize) {
-							LinkedHashMap<Integer, Double> s = similarities
+					if (userSimilarities.containsKey(user2)) {
+						if (userSimilarities.get(user2).size() < size) {
+							LinkedHashMap<Integer, Double> s = userSimilarities
 									.get(user2);
 							s.put(user1, sim);
 						} else {
 							int userToReplace = 0;
-							for (Map.Entry<Integer, Double> entry : similarities
+							for (Map.Entry<Integer, Double> entry : userSimilarities
 									.get(user2).entrySet()) {
 								if (sim > entry.getValue()) {
 									userToReplace = entry.getKey();
 								}
 							}
-							similarities.get(user2).remove(userToReplace);
-							similarities.get(user2).put(user1, sim);
+							userSimilarities.get(user2).remove(userToReplace);
+							userSimilarities.get(user2).put(user1, sim);
 						}
 					} else {
 						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
 						s.put(user1, sim);
-						similarities.put(user2, s);
+						userSimilarities.put(user2, s);
 					}
 				}
 
@@ -155,13 +152,13 @@ public class UserBasedPredictor extends Predictor {
 
 		// Calculate the average size of the similarity lists
 		int similaritiesCount = 0;
-		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : similarities
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities
 				.entrySet()) {
 			similaritiesCount += entry.getValue().size();
 		}
 		Recommender
 				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
-						/ (double) similarities.size());
+						/ (double) userSimilarities.size());
 
 	}
 
@@ -179,14 +176,14 @@ public class UserBasedPredictor extends Predictor {
 	public double predict(int userID, int movieID) {
 
 		// If the user hasn't rated any movie yet, return 0
-		if (!userMovieRatings.keySet().contains(userID)) {
+		if (!data.getUserMovieRatings().keySet().contains(userID)) {
 			return 0;
 		}
 
-		double prediction = averageRatings.get(userID);
+		double prediction = data.getAverageUserRatings().get(userID);
 
 		// If there are no similarities stored, return the user's average
-		if (similarities.get(userID) == null) {
+		if (userSimilarities.get(userID) == null) {
 			return prediction;
 		}
 
@@ -194,31 +191,32 @@ public class UserBasedPredictor extends Predictor {
 		ArrayList<Double> ratingsList = new ArrayList<Double>();
 		ArrayList<Double> averageList = new ArrayList<Double>();
 
-		for (Map.Entry<Integer, Double> neighbour : similarities.get(userID)
-				.entrySet()) {
-			if (userMovieRatings.get(neighbour.getKey()).get(movieID) != null) {
+		for (Map.Entry<Integer, Double> neighbour : userSimilarities
+				.get(userID).entrySet()) {
+			if (data.getUserMovieRatings().get(neighbour.getKey()).get(movieID) != null) {
 				similaritiesList.add(neighbour.getValue());
-				ratingsList.add(userMovieRatings.get(neighbour.getKey()).get(
-						movieID));
-				averageList.add(averageRatings.get(neighbour.getKey()));
+				ratingsList.add(data.getUserMovieRatings()
+						.get(neighbour.getKey()).get(movieID));
+				averageList.add(data.getAverageUserRatings().get(
+						neighbour.getKey()));
 			}
 		}
 
-		if (pMetric.equals("weightedsum")) {
+		if (pMetric.equals("weighted")) {
 			prediction = Prediction.calculateWeightedSum(similaritiesList,
 					ratingsList);
-		} else if (pMetric.equals("adjustedsum")) {
-			prediction = Prediction.calculateAdjustedSum(
-					averageRatings.get(userID), averageList, ratingsList);
-		} else if (pMetric.equals("adjustedweightedsum")) {
-			prediction = Prediction.calculateAdjustedWeightedSum(
-					averageRatings.get(userID), averageList, ratingsList,
-					similaritiesList);
+		} else if (pMetric.equals("adjusted")) {
+			prediction = Prediction.calculateAdjustedSum(data
+					.getAverageUserRatings().get(userID), averageList,
+					ratingsList);
+		} else if (pMetric.equals("adjweighted")) {
+			prediction = Prediction.calculateAdjustedWeightedSum(data
+					.getAverageUserRatings().get(userID), averageList,
+					ratingsList, similaritiesList);
 		}
 
 		if (prediction == 0) {
-			// System.out.println("Returning average");
-			return averageRatings.get(userID);
+			return data.getAverageUserRatings().get(userID);
 		}
 
 		return prediction;
@@ -239,8 +237,8 @@ public class UserBasedPredictor extends Predictor {
 
 		// Create list with all movies rated by both user1 and user2
 		ArrayList<Integer> sharedMovies = new ArrayList<Integer>();
-		for (Integer movie : userRatedMovies.get(user1)) {
-			if (userRatedMovies.get(user2).contains(movie)) {
+		for (Integer movie : data.getMoviesByUser().get(user1)) {
+			if (data.getMoviesByUser().get(user2).contains(movie)) {
 				sharedMovies.add(movie);
 			}
 		}
@@ -251,8 +249,8 @@ public class UserBasedPredictor extends Predictor {
 
 		int i = 0;
 		for (Integer movie : sharedMovies) {
-			ratingsUser1[i] = userMovieRatings.get(user1).get(movie);
-			ratingsUser2[i] = userMovieRatings.get(user2).get(movie);
+			ratingsUser1[i] = data.getUserMovieRatings().get(user1).get(movie);
+			ratingsUser2[i] = data.getUserMovieRatings().get(user2).get(movie);
 			i++;
 		}
 
@@ -261,73 +259,11 @@ public class UserBasedPredictor extends Predictor {
 					ratingsUser2);
 		} else if (sMetric.equals("pearson")) {
 			sim = Similarity.calculatePearsonCorrelation(ratingsUser1,
-					ratingsUser2, averageRatings.get(user1),
-					averageRatings.get(user2));
+					ratingsUser2, data.getAverageUserRatings().get(user1), data
+							.getAverageUserRatings().get(user2));
 		}
 
 		return sim;
-	}
-
-	/**
-	 * Populate the hash map UserRatedMovies with the data from the input file
-	 * 
-	 * @param data
-	 *            : the input data file
-	 */
-	public void initializeUserRatedMovies(double[][] data) {
-		for (int i = 0; i < data.length; i++) {
-			// user already in the hash map
-			if (userRatedMovies.containsKey((int) data[i][0])) {
-				HashSet<Integer> movies = userRatedMovies.get((int) data[i][0]);
-				movies.add((int) data[i][1]);
-			} else {
-				HashSet<Integer> movies = new HashSet<Integer>();
-				movies.add((int) data[i][1]);
-				userRatedMovies.put((int) data[i][0], movies);
-			}
-
-		}
-	}
-
-	/**
-	 * Populate the hash set UserMovieRatings with the data from the input file
-	 * 
-	 * @param data
-	 *            : the input data file
-	 */
-	public void initializeUserMovieRatings(double[][] data) {
-		for (int i = 0; i < data.length; i++) {
-			if (userMovieRatings.containsKey((int) data[i][0])) {
-				userMovieRatings.get((int) data[i][0]).put((int) data[i][1],
-						data[i][2]);
-			} else {
-				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
-				ratings.put((int) data[i][1], data[i][2]);
-				userMovieRatings.put((int) data[i][0], ratings);
-			}
-		}
-	}
-
-	/**
-	 * Compute the average ratings for all users
-	 * 
-	 * @param data
-	 *            : input data
-	 */
-	public void computeUserAverageRatings(double[][] data) {
-
-		for (Integer userID : userRatedMovies.keySet()) {
-			double rating = 0;
-			for (Integer movieID : userRatedMovies.get(userID)) {
-				rating += userMovieRatings.get(userID).get(movieID);
-			}
-			rating /= (double) userRatedMovies.get(userID).size();
-			averageRatings.put(userID, rating);
-		}
-	}
-
-	public HashMap<Integer, LinkedHashMap<Integer, Double>> getSimilarities() {
-		return similarities;
 	}
 
 }

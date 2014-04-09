@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import rec.Data;
 import rec.ItemBasedPredictor;
 
 public class ItemBasedTest {
@@ -19,9 +20,11 @@ public class ItemBasedTest {
 	@Test
 	public void testItemBasedPredictor() {
 
-		ItemBasedPredictor p = new ItemBasedPredictor(20, "cosine",
-				"weightedsum", false);
-		p.train(trainData);
+		Data data = new Data(trainData);
+
+		ItemBasedPredictor p = new ItemBasedPredictor(20, "cosine", "weighted",
+				data);
+		p.train();
 
 		// Test cosine similarities between all movies
 

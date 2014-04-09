@@ -7,10 +7,11 @@ package rec;
  */
 public class AverageBasedPredictor extends Predictor {
 
-	private static double averageRating;
+	private Data data;
+	private double averageRating;
 
-	public AverageBasedPredictor() {
-		averageRating = 0;
+	public AverageBasedPredictor(Data d) {
+		data = d;
 	}
 
 	@Override
@@ -18,11 +19,15 @@ public class AverageBasedPredictor extends Predictor {
 	 * This method trains the predictor using the data given in the input array 'data'
 	 * @param data: an array of triples (user, movie, rating)
 	 */
-	public void train(double[][] data) {
-		for (int i = 0; i < data.length; i++) {
-			averageRating += data[i][2];
+	public void train() {
+		int ratingCount = 0;
+		for (Integer user : data.getUserMovieRatings().keySet()) {
+			for (Double rating : data.getUserMovieRatings().get(user).values()) {
+				averageRating += rating;
+				ratingCount++;
+			}
 		}
-		averageRating = averageRating / (double) data.length;
+		averageRating = averageRating / (double) ratingCount;
 	}
 
 	@Override

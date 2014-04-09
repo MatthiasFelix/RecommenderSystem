@@ -15,7 +15,7 @@ public abstract class Predictor {
 	 * @param data
 	 *            : an array of triples (user, movie, rating)
 	 */
-	public abstract void train(double[][] data);
+	public abstract void train();
 
 	/**
 	 * This method computes the predicted rating of user 'userID' for the movie

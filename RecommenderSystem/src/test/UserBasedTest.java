@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import rec.Data;
 import rec.UserBasedPredictor;
 
 public class UserBasedTest {
@@ -19,9 +20,11 @@ public class UserBasedTest {
 	@Test
 	public void testUserBasedPredictor() {
 
+		Data data = new Data(trainData);
+
 		UserBasedPredictor p = new UserBasedPredictor(20, "pearson",
-				"adjustedweightedsum", false);
-		p.train(trainData);
+				"adjweighted", data);
+		p.train();
 
 		// Test pearson similarities between all users
 

@@ -12,15 +12,16 @@ import java.io.IOException;
 public class ParseInput {
 
 	private static final String loglevel = "loglevel";
+	private static final String dataset = "dataset";
 	private static final String traindata = "traindata";
 	private static final String testdata = "testdata";
-	private static final String neighbourhoodsize = "neighbourhoodsize";
+	private static final String neighbourhood = "neighbourhood";
+	private static final String neighbourhoodsizes = "nsizes";
+	private static final String thresholds = "thresholds";
 	private static final String predictors = "predictors";
 	private static final String smetrics = "smetrics";
 	private static final String pmetrics = "pmetrics";
-	private static final String threshold = "threshold";
-	private static final String dataset = "dataset";
-	private static final String socialNeighbourhood = "socialNeighbourhood";
+	private static final String socialNeighbourhood = "socialneighbourhood";
 
 	public static void setParameters(String fileName) {
 
@@ -28,9 +29,20 @@ public class ParseInput {
 			BufferedReader b = new BufferedReader(new FileReader(fileName));
 			String line;
 			while ((line = b.readLine()) != null) {
+
 				String[] s;
-				// do nothing, line is a comments
 				if (line.contains("#")) {
+					// Do nothing, line is a comment
+				}
+
+				else if (line.contains(loglevel)) {
+					s = line.split(" ");
+					Recommender.setLoglevel(s[1]);
+				}
+
+				else if (line.contains(dataset)) {
+					s = line.split(" ");
+					Recommender.setDataSet(s[1]);
 				}
 
 				else if (line.contains(traindata)) {
@@ -51,23 +63,31 @@ public class ParseInput {
 					Recommender.setTestDataFiles(data);
 				}
 
-				else if (line.contains(neighbourhoodsize)) {
+				else if (line.startsWith(neighbourhood)) {
 					s = line.split(" ");
-					try {
-						Recommender.setNeighbourhoodSize(new Integer(s[1]));
-					} catch (NumberFormatException e) {
-						System.err
-								.println("neighbourhoodsize must be an integer.");
+					String[] n = new String[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						n[i - 1] = s[i];
 					}
+					Recommender.setNeighbourhood(n);
 				}
 
-				else if (line.contains(threshold)) {
+				else if (line.contains(neighbourhoodsizes)) {
 					s = line.split(" ");
-					if (s[1].equals("true")) {
-						Recommender.setThreshold(true);
-					} else {
-						Recommender.setThreshold(false);
+					int[] sizes = new int[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						sizes[i - 1] = new Integer(s[i]);
 					}
+					Recommender.setNeighbourhoodSizes(sizes);
+				}
+
+				else if (line.contains(thresholds)) {
+					s = line.split(" ");
+					double[] thresh = new double[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						thresh[i - 1] = new Double(s[i]);
+					}
+					Recommender.setThresholds(thresh);
 				}
 
 				else if (line.contains(predictors)) {
@@ -97,11 +117,6 @@ public class ParseInput {
 					Recommender.setPredictionMetrics(pmet);
 				}
 
-				else if (line.contains(dataset)) {
-					s = line.split(" ");
-					Recommender.setFileDirectory(s[1]);
-				}
-
 				else if (line.contains(socialNeighbourhood)) {
 					s = line.split(" ");
 					String[] socialN = new String[s.length - 1];
@@ -109,11 +124,6 @@ public class ParseInput {
 						socialN[i - 1] = s[i];
 					}
 					Recommender.setSocialNeighbourhood(socialN);
-				}
-
-				else if (line.contains(loglevel)) {
-					s = line.split(" ");
-					Recommender.setLoglevel(s[1]);
 				}
 
 			}
