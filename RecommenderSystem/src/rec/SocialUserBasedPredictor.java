@@ -3,37 +3,19 @@ package rec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class SocialUserBasedPredictor extends Predictor {
 
 	private Data data;
-	private String neighbourhood, sMetric, pMetric, socialNeighbourhood;
-	private int size;
-	private double threshold;
+	private String sMetric, pMetric, socialNeighbourhood;
 
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
-	// Depending on which constructor is used, the algorithm runs with either a
-	// neighbourhood size or a threshold
-	public SocialUserBasedPredictor(int neighbourhoodSize, String sMetric,
-			String pMetric, String socialNeighbourhood, Data d) {
+	public SocialUserBasedPredictor(String sMetric, String pMetric,
+			String socialNeighbourhood, Data d) {
 		this.data = d;
-		this.neighbourhood = "size";
-		this.size = neighbourhoodSize;
-		this.sMetric = sMetric;
-		this.pMetric = pMetric;
-		this.socialNeighbourhood = socialNeighbourhood;
-
-		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
-
-	}
-
-	public SocialUserBasedPredictor(double threshold, String sMetric,
-			String pMetric, String socialNeighbourhood, Data d) {
-		this.data = d;
-		this.neighbourhood = "threshold";
-		this.threshold = threshold;
 		this.sMetric = sMetric;
 		this.pMetric = pMetric;
 		this.socialNeighbourhood = socialNeighbourhood;
@@ -45,7 +27,58 @@ public class SocialUserBasedPredictor extends Predictor {
 	@Override
 	public void train() {
 
-		// TODO Compute similarities, use different neighbourhoods
+		double sim = 0;
+
+		if (socialNeighbourhood.contains("friends")) {
+
+			String[] t = socialNeighbourhood.split("_");
+			int k = new Integer(t[1]);
+
+			for (Integer user1 : data.getMoviesByUser().keySet()) {
+				if (data.getUserFriends().get(user1) == null) {
+					// User has no friends :)
+					System.out.println("User with no friends: " + user1);
+					continue;
+				}
+
+				for (Integer user2 : getFriendsKthLevel(user1, k)) {
+					sim = computeSimilarity(user1, user2);
+
+					// this is for user1's list
+					if (userSimilarities.containsKey(user1)) {
+						LinkedHashMap<Integer, Double> s = userSimilarities
+								.get(user1);
+						s.put(user2, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user2, sim);
+						userSimilarities.put(user1, s);
+					}
+
+					// this is for user2's list
+					if (userSimilarities.containsKey(user2)) {
+						HashMap<Integer, Double> s = userSimilarities
+								.get(user2);
+						s.put(user1, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user1, sim);
+						userSimilarities.put(user2, s);
+					}
+
+				}
+			}
+		}
+
+		// Calculate the average size of the similarity lists
+		int similaritiesCount = 0;
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities
+				.entrySet()) {
+			similaritiesCount += entry.getValue().size();
+		}
+		Recommender
+				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
+						/ (double) userSimilarities.size());
 
 	}
 
@@ -59,27 +92,40 @@ public class SocialUserBasedPredictor extends Predictor {
 
 		double prediction = data.getAverageUserRatings().get(userID);
 
+		ArrayList<Double> similaritiesList = new ArrayList<Double>();
 		ArrayList<Double> ratingsList = new ArrayList<Double>();
 		ArrayList<Double> averageList = new ArrayList<Double>();
 
-		if (socialNeighbourhood.equals("all")) {
+		if (userSimilarities.get(userID) == null) {
+			return prediction;
+		}
 
-			for (Integer friend : data.getUserFriends().get(userID)) {
-				if (data.getUserMovieRatings().get(friend) != null
-						&& data.getUserMovieRatings().get(friend).get(movieID) != null) {
-					ratingsList.add(data.getUserMovieRatings().get(friend)
-							.get(movieID));
-					averageList.add(data.getAverageUserRatings().get(friend));
-				}
+		for (Map.Entry<Integer, Double> friend : userSimilarities.get(userID)
+				.entrySet()) {
+			if (data.getUserMovieRatings().get(friend.getKey()).get(movieID) != null) {
+				similaritiesList.add(friend.getValue());
+				ratingsList.add(data.getUserMovieRatings().get(friend.getKey())
+						.get(movieID));
+				averageList.add(data.getAverageUserRatings().get(
+						friend.getKey()));
 			}
+		}
 
+		if (pMetric.equals("weighted")) {
+			prediction = Prediction.calculateWeightedSum(similaritiesList,
+					ratingsList);
+		} else if (pMetric.equals("adjusted")) {
 			prediction = Prediction.calculateAdjustedSum(data
 					.getAverageUserRatings().get(userID), averageList,
 					ratingsList);
+		} else if (pMetric.equals("adjweighted")) {
+			prediction = Prediction.calculateAdjustedWeightedSum(data
+					.getAverageUserRatings().get(userID), averageList,
+					ratingsList, similaritiesList);
+		}
 
-		} else if (socialNeighbourhood.equals("similar")) {
-			// TODO use different socialneighbourhoods
-		} else if (socialNeighbourhood.equals("friendsoffriends")) {
+		// wrong part
+		if (socialNeighbourhood.equals("friendsoffriends")) {
 
 			ArrayList<Integer> friendsInList = new ArrayList<Integer>();
 
@@ -106,11 +152,6 @@ public class SocialUserBasedPredictor extends Predictor {
 				}
 			}
 
-			// TODO use different prediction measures
-			prediction = Prediction.calculateAdjustedSum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList);
-
 		}
 
 		if (prediction == 0) {
@@ -120,6 +161,36 @@ public class SocialUserBasedPredictor extends Predictor {
 
 		return prediction;
 
+	}
+
+	public ArrayList<Integer> getFriendsKthLevel(int userID, int k) {
+
+		ArrayList<Integer> friends = new ArrayList<Integer>();
+
+		if (k == 1) {
+
+			for (Integer friend : data.getUserFriends().get(userID)) {
+				friends.add(friend);
+			}
+			return friends;
+
+		} else {
+
+			// Recursively call method to traverse the friend graph until k-th
+			// level
+			for (Integer friend : data.getUserFriends().get(userID)) {
+				ArrayList<Integer> furtherFriends = getFriendsKthLevel(friend,
+						k - 1);
+				for (Integer furtherFriend : furtherFriends) {
+					if (!friends.contains(furtherFriend)
+							&& furtherFriend != userID) {
+						friends.add(furtherFriend);
+					}
+				}
+			}
+			return friends;
+
+		}
 	}
 
 	/**
@@ -133,6 +204,12 @@ public class SocialUserBasedPredictor extends Predictor {
 	public double computeSimilarity(int user1, int user2) {
 
 		double sim = 0;
+
+		// HACK!
+		if (data.getMoviesByUser().get(user1) == null
+				|| data.getMoviesByUser().get(user2) == null) {
+			return sim;
+		}
 
 		// Create list with all movies rated by both user1 and user2
 		ArrayList<Integer> sharedMovies = new ArrayList<Integer>();

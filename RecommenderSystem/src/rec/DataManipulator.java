@@ -26,8 +26,10 @@ public class DataManipulator {
 
 		cleanDataSet();
 
-		normalizeRatings(userMovieRatings, 1, 5);
-		writeNormalizedData("lastfm-2k/user_artists_n.data");
+		cleanUserFriends("lastfm-2k/user_friends.txt", "lastfm-2k/user_friends_n.txt");
+
+		// normalizeRatings(userMovieRatings, 1, 5);
+		// writeNormalizedData("lastfm-2k/user_artists_n.data");
 	}
 
 	public static int[][] readData(String fileName) {
@@ -184,6 +186,37 @@ public class DataManipulator {
 			}
 		}
 		return currentMin;
+	}
+
+	public static void cleanUserFriends(String oldFileDirection,
+			String newFileName) {
+
+		int[][] friendsList = Recommender.readFriendsList(oldFileDirection);
+
+		File file = new File(
+				"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
+						+ newFileName);
+		FileWriter fileWriter;
+
+		try {
+			fileWriter = new FileWriter(file);
+			BufferedWriter b = new BufferedWriter(fileWriter);
+
+			// TODO write
+
+			for (int i = 0; i < friendsList.length; i++) {
+				if (userMovieRatings.containsKey(friendsList[i][0])
+						&& userMovieRatings.containsKey(friendsList[i][1])) {
+					b.write(friendsList[i][0] + "\t" + friendsList[i][1] + "\n");
+				}
+			}
+
+			b.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }
