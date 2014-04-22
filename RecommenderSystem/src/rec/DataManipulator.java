@@ -26,7 +26,8 @@ public class DataManipulator {
 
 		cleanDataSet();
 
-		cleanUserFriends("lastfm-2k/user_friends.txt", "lastfm-2k/user_friends_n.txt");
+		cleanUserFriends("lastfm-2k/user_friends.txt",
+				"lastfm-2k/user_friends_n.txt");
 
 		// normalizeRatings(userMovieRatings, 1, 5);
 		// writeNormalizedData("lastfm-2k/user_artists_n.data");
@@ -202,11 +203,10 @@ public class DataManipulator {
 			fileWriter = new FileWriter(file);
 			BufferedWriter b = new BufferedWriter(fileWriter);
 
-			// TODO write
-
 			for (int i = 0; i < friendsList.length; i++) {
 				if (userMovieRatings.containsKey(friendsList[i][0])
-						&& userMovieRatings.containsKey(friendsList[i][1])) {
+						&& userMovieRatings.containsKey(friendsList[i][1])
+						&& friendsList[i][0] < friendsList[i][1]) {
 					b.write(friendsList[i][0] + "\t" + friendsList[i][1] + "\n");
 				}
 			}

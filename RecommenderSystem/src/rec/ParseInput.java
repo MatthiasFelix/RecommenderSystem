@@ -22,6 +22,7 @@ public class ParseInput {
 	private static final String smetrics = "smetrics";
 	private static final String pmetrics = "pmetrics";
 	private static final String socialNeighbourhood = "socialneighbourhood";
+	private static final String socialThreshold = "socialthreshold";
 
 	public static void setParameters(String fileName) {
 
@@ -124,6 +125,15 @@ public class ParseInput {
 						socialN[i - 1] = s[i];
 					}
 					Recommender.setSocialNeighbourhood(socialN);
+				}
+
+				else if (line.contains(socialThreshold)) {
+					s = line.split(" ");
+					double[] thresh = new double[s.length - 1];
+					for (int i = 1; i < s.length; i++) {
+						thresh[i - 1] = new Double(s[i]);
+					}
+					Recommender.setSocialThresholds(thresh);
 				}
 
 			}

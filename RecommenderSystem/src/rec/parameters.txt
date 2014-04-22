@@ -14,7 +14,7 @@ traindata set1.base
 #test data (e.g. ua.test) (list of all test sets to be used)
 testdata set1.test
 
-#neighbourhood (size, threshold, social)
+#neighbourhood (size, threshold, social, socialthreshold)
 neighbourhood social
 
 #neighbourhoodSizes
@@ -27,10 +27,13 @@ thresholds 0 0.2 0.4 0.6 0.8 1
 predictors socialuser
 
 #similarity metrics (cosine, pearson)
-smetrics pearson cosine
+smetrics cosine
 
 #prediction metrics (weighted, adjusted, adjweighted)
 pmetrics adjweighted
 
 #social neighbourhood (friends_k)
-socialneighbourhood friends_1 friends_2 friends_3
+socialneighbourhood friends_7
+
+#social thresholds
+socialthreshold 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1

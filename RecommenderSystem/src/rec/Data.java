@@ -113,6 +113,13 @@ public class Data {
 				hs.add(friends[i][1]);
 				userFriends.put(friends[i][0], hs);
 			}
+			if (userFriends.containsKey(friends[i][1])) {
+				userFriends.get(friends[i][1]).add(friends[i][0]);
+			} else {
+				HashSet<Integer> hs = new HashSet<Integer>();
+				hs.add(friends[i][0]);
+				userFriends.put(friends[i][1], hs);
+			}
 		}
 	}
 

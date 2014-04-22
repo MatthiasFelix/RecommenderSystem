@@ -3,12 +3,14 @@ package rec;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 public class SocialUserBasedPredictor extends Predictor {
 
 	private Data data;
 	private String sMetric, pMetric, socialNeighbourhood;
+	private Double socialThreshold = null;
 
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
@@ -24,49 +26,65 @@ public class SocialUserBasedPredictor extends Predictor {
 
 	}
 
+	public SocialUserBasedPredictor(String sMetric, String pMetric,
+			String socialNeighbourhood, Double socialThreshold, Data d) {
+		this.data = d;
+		this.sMetric = sMetric;
+		this.pMetric = pMetric;
+		this.socialNeighbourhood = socialNeighbourhood;
+		this.socialThreshold = socialThreshold;
+
+		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
+
+	}
+
 	@Override
 	public void train() {
 
 		double sim = 0;
 
-		if (socialNeighbourhood.contains("friends")) {
+		String[] t = socialNeighbourhood.split("_");
+		int k = new Integer(t[1]);
 
-			String[] t = socialNeighbourhood.split("_");
-			int k = new Integer(t[1]);
+		for (Integer user1 : data.getMoviesByUser().keySet()) {
+			if (data.getUserFriends().get(user1) == null) {
+				// User has no friends :)
+				continue;
+			}
 
-			for (Integer user1 : data.getMoviesByUser().keySet()) {
-				if (data.getUserFriends().get(user1) == null) {
-					// User has no friends :)
-					System.out.println("User with no friends: " + user1);
-					continue;
+			ArrayList<Integer> friendsKthLevel = getFriendsKthLevel(user1, k);
+
+			for (Integer user2 : friendsKthLevel) {
+
+				sim = computeSimilarity(user1, user2);
+
+				if (socialThreshold != null) {
+					if (sim < socialThreshold) {
+						continue;
+					}
 				}
 
-				for (Integer user2 : getFriendsKthLevel(user1, k)) {
-					sim = computeSimilarity(user1, user2);
-
-					// this is for user1's list
-					if (userSimilarities.containsKey(user1)) {
-						LinkedHashMap<Integer, Double> s = userSimilarities
-								.get(user1);
-						s.put(user2, sim);
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user2, sim);
-						userSimilarities.put(user1, s);
-					}
-
-					// this is for user2's list
-					if (userSimilarities.containsKey(user2)) {
-						HashMap<Integer, Double> s = userSimilarities
-								.get(user2);
-						s.put(user1, sim);
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user1, sim);
-						userSimilarities.put(user2, s);
-					}
-
+				// this is for user1's list
+				if (userSimilarities.containsKey(user1)) {
+					LinkedHashMap<Integer, Double> s = userSimilarities
+							.get(user1);
+					s.put(user2, sim);
+				} else {
+					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+					s.put(user2, sim);
+					userSimilarities.put(user1, s);
 				}
+
+				// this is for user2's list
+				if (userSimilarities.containsKey(user2)) {
+					HashMap<Integer, Double> s = userSimilarities.get(user2);
+					s.put(user1, sim);
+				} else {
+					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+					s.put(user1, sim);
+					userSimilarities.put(user2, s);
+				}
+
 			}
 		}
 
@@ -167,6 +185,46 @@ public class SocialUserBasedPredictor extends Predictor {
 
 		ArrayList<Integer> friends = new ArrayList<Integer>();
 
+		// Initialize HashMap that stores a boolean (true if node is visited in
+		// BFS, false otherwise). In the beginning, no nodes are visited yet.
+		HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
+		for (Integer user : data.getUserMovieRatings().keySet()) {
+			visited.put(user, false);
+		}
+
+		HashMap<Integer, Integer> distance = new HashMap<Integer, Integer>();
+
+		LinkedList<Integer> queue = new LinkedList<Integer>();
+
+		for (Integer friend : data.getUserFriends().get(userID)) {
+			queue.offer(friend);
+			distance.put(friend, 1);
+		}
+
+		while (!queue.isEmpty()) {
+			int currentNode = queue.poll();
+			friends.add(currentNode);
+			visited.put(currentNode, true);
+			// Only go further if distance is smaller than maximal distance k
+			if (distance.get(currentNode) < k) {
+				for (Integer friend : data.getUserFriends().get(currentNode)) {
+					if (!queue.contains(friend) && visited.get(friend) == false
+							&& friend != userID) {
+						queue.offer(friend);
+						distance.put(friend, distance.get(currentNode) + 1);
+					}
+				}
+			}
+		}
+
+		return friends;
+	}
+
+	// Slow, should not be used!!
+	public ArrayList<Integer> getFriendsKthLevelRecursive(int userID, int k) {
+
+		ArrayList<Integer> friends = new ArrayList<Integer>();
+
 		if (k == 1) {
 
 			for (Integer friend : data.getUserFriends().get(userID)) {
@@ -179,13 +237,16 @@ public class SocialUserBasedPredictor extends Predictor {
 			// Recursively call method to traverse the friend graph until k-th
 			// level
 			for (Integer friend : data.getUserFriends().get(userID)) {
-				ArrayList<Integer> furtherFriends = getFriendsKthLevel(friend,
-						k - 1);
+				ArrayList<Integer> furtherFriends = getFriendsKthLevelRecursive(
+						friend, k - 1);
 				for (Integer furtherFriend : furtherFriends) {
 					if (!friends.contains(furtherFriend)
 							&& furtherFriend != userID) {
 						friends.add(furtherFriend);
 					}
+				}
+				if (!friends.contains(friend)) {
+					friends.add(friend);
 				}
 			}
 			return friends;

@@ -27,6 +27,7 @@ public class Recommender {
 	private static String[] smetrics = { "cosine" };
 	private static String[] pmetrics = { "adjustedweightedsum" };
 	private static String[] socialNeighbourhood = { "allfriends" };
+	private static double[] socialThresholds = { 0.2, 0.7 };
 
 	private static String friendsDataFile = "user_friends_n.txt";
 
@@ -198,13 +199,56 @@ public class Recommender {
 														+ String.format("%.2f",
 																averageSizeOfSimilarityListUsers)
 														+ "\n");
-									else if (predictor
-											.equals("socialitem"))
+								}
+							}
+						}
+					}
+				}
+			} else if (nbHood.equals("socialthreshold")) {
+				for (String socialN : socialNeighbourhood) {
+					System.out.println("----------------------------------");
+					System.out.println("Social Neighbourhood: " + socialN);
+					System.out.println("----------------------------------");
+					for (Double socialThreshold : socialThresholds) {
+						System.out
+								.println("----------------------------------");
+						System.out.println("Threshold: " + socialThreshold);
+						System.out
+								.println("----------------------------------");
+						System.out
+								.println("Predictor \t\t Similarity metric \t Prediction metric \t RMSE \t\t Run Time (s)\n");
+						for (String predictor : predictors) {
+							// Only run the social settings if a social
+							// predictor is
+							// used
+							if (predictor.contains("social")) {
+								for (String smetric : smetrics) {
+									for (String pmetric : pmetrics) {
+										long startTime = System.nanoTime();
 										System.out
-												.println("Average neighbourhood size for movies: "
-														+ String.format("%.2f",
-																averageSizeOfSimilarityListMovies)
-														+ "\n");
+												.println(String
+														.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
+																predictor,
+																smetric,
+																pmetric,
+																runTest(nbHood,
+																		socialThreshold,
+																		predictor,
+																		smetric,
+																		pmetric,
+																		socialN,
+																		data),
+																((System.nanoTime() - startTime) / Math
+																		.pow(10,
+																				9))));
+										if (predictor.equals("socialuser"))
+											System.out
+													.println("Average neighbourhood size for users: "
+															+ String.format(
+																	"%.2f",
+																	averageSizeOfSimilarityListUsers)
+															+ "\n");
+									}
 								}
 							}
 						}
@@ -242,8 +286,13 @@ public class Recommender {
 			else
 				p = new ItemBasedPredictor(threshOrSize, smetric, pmetric, d);
 		} else if (predictor.equals("socialuser")) {
-			p = new SocialUserBasedPredictor(smetric, pmetric,
-					socialNeighbourhood, d);
+			if (nbHood.equals("social")) {
+				p = new SocialUserBasedPredictor(smetric, pmetric,
+						socialNeighbourhood, d);
+			} else if (nbHood.equals("socialthreshold")) {
+				p = new SocialUserBasedPredictor(smetric, pmetric,
+						socialNeighbourhood, threshOrSize, d);
+			}
 		}
 
 		// train the predictor
@@ -424,6 +473,10 @@ public class Recommender {
 
 	public static void setSocialNeighbourhood(String[] s) {
 		socialNeighbourhood = s;
+	}
+
+	public static void setSocialThresholds(double[] thresholds) {
+		socialThresholds = thresholds;
 	}
 
 	// Setters for averages (used by UserBasedPredictor/ItemBasedPredictor)
