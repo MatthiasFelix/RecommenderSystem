@@ -1,9 +1,12 @@
 package rec;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * This class implements the user-based collaborative filtering algorithm
@@ -19,6 +22,9 @@ public class UserBasedPredictor extends Predictor {
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
+	// needed to sort the neighbour lists by similarity
+	private Comparator<Map.Entry<Integer, Double>> comparator;
+
 	// Depending on which constructor is used, the algorithm runs with either a
 	// neighbourhood size or a threshold
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
@@ -31,6 +37,13 @@ public class UserBasedPredictor extends Predictor {
 
 		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
 
+		comparator = new Comparator<Map.Entry<Integer, Double>>() {
+			public int compare(Map.Entry<Integer, Double> o1,
+					Map.Entry<Integer, Double> o2) {
+				return (o1.getValue()).compareTo(o2.getValue());
+			}
+		};
+
 	}
 
 	public UserBasedPredictor(double threshold, String sMetric, String pMetric,
@@ -42,6 +55,13 @@ public class UserBasedPredictor extends Predictor {
 		this.pMetric = pMetric;
 
 		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
+
+		comparator = new Comparator<Map.Entry<Integer, Double>>() {
+			public int compare(Map.Entry<Integer, Double> o1,
+					Map.Entry<Integer, Double> o2) {
+				return (o1.getValue()).compareTo(o2.getValue());
+			}
+		};
 
 	}
 
@@ -59,6 +79,7 @@ public class UserBasedPredictor extends Predictor {
 		// hash map similarities
 
 		double sim = 0;
+
 		for (Integer user1 : data.getMoviesByUser().keySet()) {
 			for (Integer user2 : data.getMoviesByUser().tailMap(user1, false)
 					.keySet()) {
@@ -71,81 +92,51 @@ public class UserBasedPredictor extends Predictor {
 					if (sim < threshold) {
 						continue;
 					}
-
-					// this is for user1's list
-					if (userSimilarities.containsKey(user1)) {
-						LinkedHashMap<Integer, Double> s = userSimilarities
-								.get(user1);
-						s.put(user2, sim);
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user2, sim);
-						userSimilarities.put(user1, s);
-					}
-
-					// this is for user2's list
-					if (userSimilarities.containsKey(user2)) {
-						HashMap<Integer, Double> s = userSimilarities
-								.get(user2);
-						s.put(user1, sim);
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user1, sim);
-						userSimilarities.put(user2, s);
-					}
-
-				} else if (neighbourhood.equals("size")) {
-					// Add similarity to neighbourhood only if it's big enough
-
-					// User1's list
-					if (userSimilarities.containsKey(user1)) {
-						if (userSimilarities.get(user1).size() < size) {
-							LinkedHashMap<Integer, Double> s = userSimilarities
-									.get(user1);
-							s.put(user2, sim);
-						} else {
-							int userToReplace = 0;
-							for (Map.Entry<Integer, Double> entry : userSimilarities
-									.get(user1).entrySet()) {
-								if (sim > entry.getValue()) {
-									userToReplace = entry.getKey();
-								}
-							}
-							if (userToReplace != 0) {
-								userSimilarities.get(user1).remove(
-										userToReplace);
-								userSimilarities.get(user1).put(user2, sim);
-							}
-						}
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user2, sim);
-						userSimilarities.put(user1, s);
-					}
-
-					// User2's list
-					if (userSimilarities.containsKey(user2)) {
-						if (userSimilarities.get(user2).size() < size) {
-							LinkedHashMap<Integer, Double> s = userSimilarities
-									.get(user2);
-							s.put(user1, sim);
-						} else {
-							int userToReplace = 0;
-							for (Map.Entry<Integer, Double> entry : userSimilarities
-									.get(user2).entrySet()) {
-								if (sim > entry.getValue()) {
-									userToReplace = entry.getKey();
-								}
-							}
-							userSimilarities.get(user2).remove(userToReplace);
-							userSimilarities.get(user2).put(user1, sim);
-						}
-					} else {
-						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-						s.put(user1, sim);
-						userSimilarities.put(user2, s);
-					}
 				}
+
+				// this is for user1's list
+				if (userSimilarities.containsKey(user1)) {
+					userSimilarities.get(user1).put(user2, sim);
+				} else {
+					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+					s.put(user2, sim);
+					userSimilarities.put(user1, s);
+				}
+
+				// this is for user2's list
+				if (userSimilarities.containsKey(user2)) {
+					userSimilarities.get(user2).put(user1, sim);
+				} else {
+					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+					s.put(user1, sim);
+					userSimilarities.put(user2, s);
+				}
+
+			}
+		}
+
+		if (neighbourhood.equals("size")) {
+			// sort the maps by decreasing similarity and take the N most
+			// similar
+			// users
+			for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities
+					.entrySet()) {
+				ArrayList<Entry<Integer, Double>> list = new ArrayList<Entry<Integer, Double>>(
+						entry.getValue().entrySet());
+
+				Collections.sort(list, Collections.reverseOrder(comparator));
+
+				// take N most similar users
+				LinkedHashMap<Integer, Double> m = new LinkedHashMap<Integer, Double>();
+				int count = 0;
+				for (Entry<Integer, Double> e : list) {
+					if (count == size)
+						break;
+					m.put(e.getKey(), e.getValue());
+					count++;
+				}
+				// replace current map with the map with most similar users
+				userSimilarities.put(entry.getKey(), m);
 
 			}
 		}

@@ -25,10 +25,11 @@ public class CrossValidator {
 	public static void main(String[] args) {
 		userMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 
-		data = Recommender.readData("lastfm-2k/user_artists_n.data");
+		// data = Recommender.readData("lastfm-2k/user_artists_n.data");
+		data = Recommender.readData("artificial/ratings.txt");
 		initializeUserMovieRatings(data);
 
-		divide(0.8, 5);
+		divide(0.8, 3);
 	}
 
 	public static void initializeUserMovieRatings(double[][] data) {
@@ -66,11 +67,17 @@ public class CrossValidator {
 
 		for (int i = 1; i <= repetitions; i++) {
 
+			// File baseFile = new File(
+			// "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
+			// + i + ".base");
+			// File testFile = new File(
+			// "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
+			// + i + ".test");
 			File baseFile = new File(
-					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/set"
 							+ i + ".base");
 			File testFile = new File(
-					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/set"
 							+ i + ".test");
 			FileWriter baseFileWriter;
 			FileWriter testFileWriter;
@@ -87,7 +94,6 @@ public class CrossValidator {
 				for (Integer user : userMovieRatings.keySet()) {
 
 					int N = userMovieRatings.get(user).size();
-					System.out.println("N: " + N);
 
 					int baseMax = Math.round((float) (N * basePercentage));
 					int testMax = N - baseMax;

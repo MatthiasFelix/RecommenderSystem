@@ -1,9 +1,13 @@
 package rec;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * This is the main class of the recommender package. It reads the parameter
@@ -40,6 +44,9 @@ public class Recommender {
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListMovies = 0;
 
+	// Array that stores resulting RMSE's
+	private static ArrayList<Double> RMSEResults;
+
 	/**
 	 * The main function sets the parameters, runs read the training and test
 	 * data and runs the predictors.
@@ -62,6 +69,9 @@ public class Recommender {
 		// Read the file with the friends relations
 		userFriends = readFriendsList(dataSet + friendsDataFile);
 
+		// Initialize the result array
+		RMSEResults = new ArrayList<Double>();
+
 		// Run the tests for all sets of .base and .test files
 		for (int c = 0; c < trainDataFiles.length; c++) {
 
@@ -81,6 +91,9 @@ public class Recommender {
 			// Run all tests (all combinations of the specified predictors,
 			// pmetrics, smetrics etc.)
 			runAllTests(data);
+
+			// Uncomment if you want to write the RMSE results to an output file
+			// writeRMSEResultsToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/output9.txt");
 
 		}
 
@@ -326,6 +339,8 @@ public class Recommender {
 		}
 		RMSE = Math.sqrt(RMSE / (double) N);
 
+		RMSEResults.add(RMSE);
+
 		return RMSE;
 	}
 
@@ -424,6 +439,29 @@ public class Recommender {
 		}
 
 		return friendsList;
+	}
+
+	// Method that write the resulting RMSE's to a file
+	public static void writeRMSEResultsToFile(String fileName) {
+
+		File file = new File(fileName);
+		FileWriter fileWriter;
+
+		try {
+
+			fileWriter = new FileWriter(file);
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+
+			for (Double RMSE : RMSEResults) {
+				bufferedWriter.write(RMSE + "\n");
+			}
+
+			bufferedWriter.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	// Setters that are used by the ParseInput class

@@ -56,35 +56,35 @@ public class SocialUserBasedPredictor extends Predictor {
 
 			for (Integer user2 : friendsKthLevel) {
 
-				sim = computeSimilarity(user1, user2);
+				if (user1 < user2) {
 
-				if (socialThreshold != null) {
-					if (sim < socialThreshold) {
-						continue;
+					sim = computeSimilarity(user1, user2);
+
+					if (socialThreshold != null) {
+						if (sim < socialThreshold) {
+							continue;
+						}
 					}
-				}
 
-				// this is for user1's list
-				if (userSimilarities.containsKey(user1)) {
-					LinkedHashMap<Integer, Double> s = userSimilarities
-							.get(user1);
-					s.put(user2, sim);
-				} else {
-					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-					s.put(user2, sim);
-					userSimilarities.put(user1, s);
-				}
+					// this is for user1's list
+					if (userSimilarities.containsKey(user1)) {
+						userSimilarities.get(user1).put(user2, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user2, sim);
+						userSimilarities.put(user1, s);
+					}
 
-				// this is for user2's list
-				if (userSimilarities.containsKey(user2)) {
-					HashMap<Integer, Double> s = userSimilarities.get(user2);
-					s.put(user1, sim);
-				} else {
-					LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
-					s.put(user1, sim);
-					userSimilarities.put(user2, s);
-				}
+					// this is for user2's list
+					if (userSimilarities.containsKey(user2)) {
+						userSimilarities.get(user2).put(user1, sim);
+					} else {
+						LinkedHashMap<Integer, Double> s = new LinkedHashMap<Integer, Double>();
+						s.put(user1, sim);
+						userSimilarities.put(user2, s);
+					}
 
+				}
 			}
 		}
 
@@ -140,36 +140,6 @@ public class SocialUserBasedPredictor extends Predictor {
 			prediction = Prediction.calculateAdjustedWeightedSum(data
 					.getAverageUserRatings().get(userID), averageList,
 					ratingsList, similaritiesList);
-		}
-
-		// wrong part
-		if (socialNeighbourhood.equals("friendsoffriends")) {
-
-			ArrayList<Integer> friendsInList = new ArrayList<Integer>();
-
-			for (Integer friend : data.getUserFriends().get(userID)) {
-				if (!friendsInList.contains(friend)
-						&& data.getUserMovieRatings().get(friend) != null
-						&& data.getUserMovieRatings().get(friend).get(movieID) != null) {
-					ratingsList.add(data.getUserMovieRatings().get(friend)
-							.get(movieID));
-					averageList.add(data.getAverageUserRatings().get(friend));
-					friendsInList.add(friend);
-				}
-				for (Integer friendsFriend : data.getUserFriends().get(friend)) {
-					if (!friendsInList.contains(friendsFriend)
-							&& data.getUserMovieRatings().get(friendsFriend) != null
-							&& data.getUserMovieRatings().get(friendsFriend)
-									.get(movieID) != null) {
-						ratingsList.add(data.getUserMovieRatings()
-								.get(friendsFriend).get(movieID));
-						averageList.add(data.getAverageUserRatings().get(
-								friendsFriend));
-						friendsInList.add(friendsFriend);
-					}
-				}
-			}
-
 		}
 
 		if (prediction == 0) {
