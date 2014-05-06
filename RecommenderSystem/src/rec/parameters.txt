@@ -10,23 +10,23 @@ dataset lastfm-2k
 
 #training data (e.g. ua.base) (list of all training sets to be used)
 #traindata set1.base set2.base set3.base set4.base set5.base set6.base set7.base set8.base set9.base set10.base set11.base set12.base set13.base set14.base set15.base set16.base set17.base set18.base set19.base set20.base
-traindata set1.base
+traindata set1.base set3.base
 
 #test data (e.g. ua.test) (list of all test sets to be used)
 #testdata set1.test set2.test set3.test set4.test set5.test set6.test set7.test set8.test set9.test set10.test set11.test set12.test set13.test set14.test set15.test set16.test set17.test set18.test set19.test set20.test
-testdata set1.test
+testdata set1.test set3.test
 
 #neighbourhood (size, threshold, social, socialthreshold)
-neighbourhood social socialthreshold
+neighbourhood size threshold social socialthreshold
 
 #neighbourhoodSizes
-nsizes 10 50 100 300 500
+nsizes 10 50
 
 #thresholds
-thresholds 0.6
+thresholds 0.6 0.8
 
 #predictor algorithms (averagebased, useraverage, userbased, itembased, socialuser)
-predictors socialuser
+predictors userbased socialuser
 
 #similarity metrics (cosine, pearson)
 smetrics cosine
@@ -35,7 +35,7 @@ smetrics cosine
 pmetrics adjweighted
 
 #social neighbourhood (friends_k)
-socialneighbourhood friends_1 friends_2 friends_3 friends_4 friends_5 friends_6 friends_7
+socialneighbourhood friends_1 friends_2
 
 #social thresholds
-socialthreshold 0.2 0.4 0.6 0.8 1
+socialthreshold 0.2 0.8

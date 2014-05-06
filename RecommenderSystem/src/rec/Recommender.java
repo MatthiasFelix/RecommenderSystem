@@ -24,6 +24,8 @@ public class Recommender {
 	private static String dataSet = "lastfm-2k/";
 	private static String[] trainDataFiles = { "set1.base" };
 	private static String[] testDataFiles = { "set1.test" };
+	private static String currentTrainSet = "set1.base";
+	private static String currentTestSet = "set1.test";
 	private static String[] neighbourhood = { "size" };
 	private static int[] neighbourhoodSizes = { 50 };
 	private static double[] thresholds = { 0.1, 0.5 };
@@ -46,6 +48,7 @@ public class Recommender {
 
 	// Array that stores resulting RMSE's
 	private static ArrayList<Double> RMSEResults;
+	private static ResultSaver resultSaver;
 
 	/**
 	 * The main function sets the parameters, runs read the training and test
@@ -71,6 +74,7 @@ public class Recommender {
 
 		// Initialize the result array
 		RMSEResults = new ArrayList<Double>();
+		resultSaver = new ResultSaver();
 
 		// Run the tests for all sets of .base and .test files
 		for (int c = 0; c < trainDataFiles.length; c++) {
@@ -86,6 +90,10 @@ public class Recommender {
 			trainData = readData(dataSet + trainDataFiles[c]);
 			testData = readData(dataSet + testDataFiles[c]);
 
+			// Set current train- and testSet
+			currentTrainSet = trainDataFiles[c];
+			currentTestSet = testDataFiles[c];
+
 			Data data = new Data(trainData, userFriends);
 
 			// Run all tests (all combinations of the specified predictors,
@@ -94,6 +102,8 @@ public class Recommender {
 
 			// Uncomment if you want to write the RMSE results to an output file
 			// writeRMSEResultsToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/output9.txt");
+			resultSaver
+					.writeToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results1.txt");
 
 		}
 
@@ -113,20 +123,21 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
+									double rmse = runTest(nbHood,
+											(double) size, predictor, smetric,
+											pmetric, "", data);
+									double runTime = ((System.nanoTime() - startTime) / Math
+											.pow(10, 9));
 									System.out
 											.println(String
 													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor,
-															smetric,
-															pmetric,
-															runTest(nbHood,
-																	(double) size,
-																	predictor,
-																	smetric,
-																	pmetric,
-																	"", data),
-															((System.nanoTime() - startTime) / Math
-																	.pow(10, 9))));
+															predictor, smetric,
+															pmetric, rmse,
+															runTime));
+									resultSaver.putResult(currentTrainSet,
+											currentTestSet, nbHood, size, null,
+											predictor, smetric, pmetric, null,
+											null, rmse, runTime);
 								}
 							}
 						}
@@ -146,20 +157,21 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
+									double rmse = runTest(nbHood, threshold,
+											predictor, smetric, pmetric, "",
+											data);
+									double runTime = ((System.nanoTime() - startTime) / Math
+											.pow(10, 9));
 									System.out
 											.println(String
 													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor,
-															smetric,
-															pmetric,
-															runTest(nbHood,
-																	threshold,
-																	predictor,
-																	smetric,
-																	pmetric,
-																	"", data),
-															((System.nanoTime() - startTime) / Math
-																	.pow(10, 9))));
+															predictor, smetric,
+															pmetric, rmse,
+															runTime));
+									resultSaver.putResult(currentTrainSet,
+											currentTestSet, nbHood, null,
+											threshold, predictor, smetric,
+											pmetric, null, null, rmse, runTime);
 									if (predictor.equals("userbased"))
 										System.out
 												.println("Average neighbourhood size for users: "
@@ -191,21 +203,21 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
+									double rmse = runTest(nbHood, null,
+											predictor, smetric, pmetric,
+											socialN, data);
+									double runTime = ((System.nanoTime() - startTime) / Math
+											.pow(10, 9));
 									System.out
 											.println(String
 													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor,
-															smetric,
-															pmetric,
-															runTest(nbHood,
-																	null,
-																	predictor,
-																	smetric,
-																	pmetric,
-																	socialN,
-																	data),
-															((System.nanoTime() - startTime) / Math
-																	.pow(10, 9))));
+															predictor, smetric,
+															pmetric, rmse,
+															runTime));
+									resultSaver.putResult(currentTrainSet,
+											currentTestSet, nbHood, null, null,
+											predictor, smetric, pmetric,
+											socialN, null, rmse, runTime);
 									if (predictor.equals("socialuser"))
 										System.out
 												.println("Average neighbourhood size for users: "
@@ -238,22 +250,23 @@ public class Recommender {
 								for (String smetric : smetrics) {
 									for (String pmetric : pmetrics) {
 										long startTime = System.nanoTime();
+										double rmse = runTest(nbHood,
+												socialThreshold, predictor,
+												smetric, pmetric, socialN, data);
+										double runTime = ((System.nanoTime() - startTime) / Math
+												.pow(10, 9));
 										System.out
 												.println(String
 														.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
 																predictor,
 																smetric,
-																pmetric,
-																runTest(nbHood,
-																		socialThreshold,
-																		predictor,
-																		smetric,
-																		pmetric,
-																		socialN,
-																		data),
-																((System.nanoTime() - startTime) / Math
-																		.pow(10,
-																				9))));
+																pmetric, rmse,
+																runTime));
+										resultSaver.putResult(currentTrainSet,
+												currentTestSet, nbHood, null,
+												null, predictor, smetric,
+												pmetric, socialN,
+												socialThreshold, rmse, runTime);
 										if (predictor.equals("socialuser"))
 											System.out
 													.println("Average neighbourhood size for users: "
