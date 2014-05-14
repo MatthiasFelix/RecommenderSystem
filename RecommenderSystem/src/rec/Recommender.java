@@ -1,13 +1,9 @@
 package rec;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * This is the main class of the recommender package. It reads the parameter
@@ -46,8 +42,7 @@ public class Recommender {
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListMovies = 0;
 
-	// Array that stores resulting RMSE's
-	private static ArrayList<Double> RMSEResults;
+	// ResultSaver class (writes all results to a file
 	private static ResultSaver resultSaver;
 
 	/**
@@ -72,8 +67,7 @@ public class Recommender {
 		// Read the file with the friends relations
 		userFriends = readFriendsList(dataSet + friendsDataFile);
 
-		// Initialize the result array
-		RMSEResults = new ArrayList<Double>();
+		// Initialize the ResultSaver
 		resultSaver = new ResultSaver();
 
 		// Run the tests for all sets of .base and .test files
@@ -96,14 +90,12 @@ public class Recommender {
 
 			Data data = new Data(trainData, userFriends);
 
-			// Run all tests (all combinations of the specified predictors,
-			// pmetrics, smetrics etc.)
+			// Run all tests (all combinations of the specified settings)
 			runAllTests(data);
 
-			// Uncomment if you want to write the RMSE results to an output file
-			// writeRMSEResultsToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/output9.txt");
-			resultSaver
-					.writeToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results1.txt");
+			// Uncomment if you want to write the results to an output file
+			// resultSaver
+			// .writeToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results1.txt");
 
 		}
 
@@ -352,8 +344,6 @@ public class Recommender {
 		}
 		RMSE = Math.sqrt(RMSE / (double) N);
 
-		RMSEResults.add(RMSE);
-
 		return RMSE;
 	}
 
@@ -452,29 +442,6 @@ public class Recommender {
 		}
 
 		return friendsList;
-	}
-
-	// Method that write the resulting RMSE's to a file
-	public static void writeRMSEResultsToFile(String fileName) {
-
-		File file = new File(fileName);
-		FileWriter fileWriter;
-
-		try {
-
-			fileWriter = new FileWriter(file);
-			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-
-			for (Double RMSE : RMSEResults) {
-				bufferedWriter.write(RMSE + "\n");
-			}
-
-			bufferedWriter.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
 	}
 
 	// Setters that are used by the ParseInput class

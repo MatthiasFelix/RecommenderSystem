@@ -9,10 +9,13 @@ public class Item {
 	private int famosity;
 	private int itemID;
 
+	private int ratingCounter;
+
 	public Item(double quality, int famosity) {
 		this.quality = quality;
 		this.famosity = famosity;
 		itemID = ID++;
+		ratingCounter = 0;
 	}
 
 	public double getQuality() {
@@ -25,6 +28,14 @@ public class Item {
 
 	public int getID() {
 		return itemID;
+	}
+
+	public void rate() {
+		ratingCounter++;
+	}
+
+	public boolean canStillBeRated() {
+		return ratingCounter < famosity;
 	}
 
 }
