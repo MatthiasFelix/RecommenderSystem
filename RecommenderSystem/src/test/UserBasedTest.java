@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import predictors.UserBasedPredictor;
 import rec.Data;
-import rec.UserBasedPredictor;
 
 public class UserBasedTest {
 

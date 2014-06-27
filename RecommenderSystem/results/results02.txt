@@ -1,0 +1,16 @@
+trainSet	testSet	neighbourhood	neighbourhoodSize	threshold	predictor	similarityMetric	predictionMetric	socialNeighbourhood	socialThreshold	RMSE	runTime
+0.8_set1.base	0.8_set1.test	threshold	null	0.2	userbased	cosine	adjweighted	null	null	0.2779485439907346	0.69563
+0.8_set1.base	0.8_set1.test	threshold	null	0.5	userbased	cosine	adjweighted	null	null	0.2779485439907346	0.576376
+0.8_set1.base	0.8_set1.test	threshold	null	0.8	userbased	cosine	adjweighted	null	null	0.2779485439907346	0.563216
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_1	0.2	0.40022906733530084	0.086524
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_1	0.5	0.40022906733530084	0.062913
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_1	0.8	0.40022906733530084	0.05933
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_2	0.2	0.31917909840286673	1.424
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_2	0.5	0.31917909840286673	1.292619
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_2	0.8	0.31917909840286673	1.275989
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_3	0.2	0.2795241652276572	11.49558
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_3	0.5	0.2795241652276572	11.843281
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_3	0.8	0.2795241652276572	11.715632
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_4	0.2	0.2787802909204625	14.917154
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_4	0.5	0.2787802909204625	15.176795
+0.8_set1.base	0.8_set1.test	socialthreshold	null	null	socialuser	cosine	adjweighted	friends_4	0.8	0.2787802909204625	14.740009

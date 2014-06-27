@@ -16,20 +16,20 @@ import java.util.TreeMap;
 public class DataManipulator {
 
 	private static int[][] data;
-	private static TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings;
+	private static TreeMap<Integer, HashMap<Integer, Double>> userItemRatings;
 
 	public static void main(String[] args) {
-		userMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
+		userItemRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 
 		data = readData("lastfm-2k/user_artists.data");
-		initializeUserMovieRatings(data);
+		initializeUserItemRatings(data);
 
 		cleanDataSet();
 
 		cleanUserFriends("lastfm-2k/user_friends.txt",
 				"lastfm-2k/user_friends_n.txt");
 
-		// normalizeRatings(userMovieRatings, 1, 5);
+		// normalizeRatings(userItemRatings, 1, 5);
 		// writeNormalizedData("lastfm-2k/user_artists_n.data");
 	}
 
@@ -46,7 +46,7 @@ public class DataManipulator {
 			}
 			b.close();
 
-			// data is of the form: (userID, movieID,rating)_i
+			// data is of the form: (userID, itemID,rating)_i
 			data = new int[N][3];
 			int count = 0;
 			b = new BufferedReader(new FileReader(fileName));
@@ -78,15 +78,15 @@ public class DataManipulator {
 		return data;
 	}
 
-	public static void initializeUserMovieRatings(int[][] data) {
+	public static void initializeUserItemRatings(int[][] data) {
 		for (int i = 0; i < data.length; i++) {
-			if (userMovieRatings.containsKey(data[i][0])) {
-				userMovieRatings.get(data[i][0]).put(data[i][1],
+			if (userItemRatings.containsKey(data[i][0])) {
+				userItemRatings.get(data[i][0]).put(data[i][1],
 						(double) data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
 				ratings.put(data[i][1], (double) data[i][2]);
-				userMovieRatings.put(data[i][0], ratings);
+				userItemRatings.put(data[i][0], ratings);
 			}
 		}
 	}
@@ -95,35 +95,35 @@ public class DataManipulator {
 		// Remove users that have the same rating for each item OR that have
 		// less than 10 ratings
 		ArrayList<Integer> usersToRemove = new ArrayList<Integer>();
-		for (Integer userID : userMovieRatings.keySet()) {
-			if (findMinimum(userMovieRatings.get(userID).values()) == findMaximum(userMovieRatings
+		for (Integer userID : userItemRatings.keySet()) {
+			if (findMinimum(userItemRatings.get(userID).values()) == findMaximum(userItemRatings
 					.get(userID).values())) {
 				usersToRemove.add(userID);
-			} else if (userMovieRatings.get(userID).size() < 10) {
+			} else if (userItemRatings.get(userID).size() < 10) {
 				usersToRemove.add(userID);
 			}
 		}
 
 		for (Integer userID : usersToRemove) {
-			userMovieRatings.remove(userID);
+			userItemRatings.remove(userID);
 		}
 
 	}
 
 	public static void normalizeRatings(
-			TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings,
+			TreeMap<Integer, HashMap<Integer, Double>> userItemRatings,
 			double minimum, double maximum) {
 
-		for (Integer userID : userMovieRatings.keySet()) {
+		for (Integer userID : userItemRatings.keySet()) {
 
-			double currentMin = findMinimum(userMovieRatings.get(userID)
+			double currentMin = findMinimum(userItemRatings.get(userID)
 					.values());
-			double currentMax = findMaximum(userMovieRatings.get(userID)
+			double currentMax = findMaximum(userItemRatings.get(userID)
 					.values());
 
-			// Normalize the ratings and put them back into the userMovieRatings
+			// Normalize the ratings and put them back into the userItemRatings
 			// hash map
-			for (Map.Entry<Integer, Double> entry : userMovieRatings
+			for (Map.Entry<Integer, Double> entry : userItemRatings
 					.get(userID).entrySet()) {
 				double newRating;
 				if (currentMin == currentMax) {
@@ -136,7 +136,7 @@ public class DataManipulator {
 				}
 				System.out.println("Replace " + entry.getValue() + " with "
 						+ newRating);
-				userMovieRatings.get(userID).put(entry.getKey(), newRating);
+				userItemRatings.get(userID).put(entry.getKey(), newRating);
 			}
 
 		}
@@ -154,10 +154,10 @@ public class DataManipulator {
 			fileWriter = new FileWriter(file);
 			BufferedWriter b = new BufferedWriter(fileWriter);
 
-			for (Integer userID : userMovieRatings.keySet()) {
-				for (Integer movieID : userMovieRatings.get(userID).keySet()) {
-					b.write(userID + "\t" + movieID + "\t"
-							+ userMovieRatings.get(userID).get(movieID) + "\n");
+			for (Integer userID : userItemRatings.keySet()) {
+				for (Integer itemID : userItemRatings.get(userID).keySet()) {
+					b.write(userID + "\t" + itemID + "\t"
+							+ userItemRatings.get(userID).get(itemID) + "\n");
 				}
 			}
 
@@ -204,8 +204,8 @@ public class DataManipulator {
 			BufferedWriter b = new BufferedWriter(fileWriter);
 
 			for (int i = 0; i < friendsList.length; i++) {
-				if (userMovieRatings.containsKey(friendsList[i][0])
-						&& userMovieRatings.containsKey(friendsList[i][1])
+				if (userItemRatings.containsKey(friendsList[i][0])
+						&& userItemRatings.containsKey(friendsList[i][1])
 						&& friendsList[i][0] < friendsList[i][1]) {
 					b.write(friendsList[i][0] + "\t" + friendsList[i][1] + "\n");
 				}

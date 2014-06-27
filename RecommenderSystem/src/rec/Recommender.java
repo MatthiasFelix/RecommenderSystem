@@ -1,9 +1,18 @@
 package rec;
 
+import generator.RatingGenerator;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+
+import predictors.AverageBasedPredictor;
+import predictors.ItemBasedPredictor;
+import predictors.Predictor;
+import predictors.SocialUserBasedPredictor;
+import predictors.UserAverageBasedPredictor;
+import predictors.UserBasedPredictor;
 
 /**
  * This is the main class of the recommender package. It reads the parameter
@@ -12,8 +21,14 @@ import java.io.IOException;
  */
 public class Recommender {
 
-	private static String parameterFile = "src/rec/parameters.txt";
+	private static String rootPath = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/";
+
+	// private static String parameterFile = "src/rec/parameters.txt";
+	private static String parameterFile = "/home/user/felix/data/parameters.txt";
 	private static final boolean DEBUG = true;
+
+	private static final boolean CREATERESULTFILE = true;
+	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results04.txt";
 
 	// default settings
 	private static boolean logLevel = !DEBUG;
@@ -27,11 +42,15 @@ public class Recommender {
 	private static double[] thresholds = { 0.1, 0.5 };
 	private static String[] predictors = { "userbased" };
 	private static String[] smetrics = { "cosine" };
-	private static String[] pmetrics = { "adjustedweightedsum" };
-	private static String[] socialNeighbourhood = { "allfriends" };
+	private static String[] pmetrics = { "adjweighted" };
+	private static String[] socialNeighbourhood = { "friends_1" };
 	private static double[] socialThresholds = { 0.2, 0.7 };
 
-	private static String friendsDataFile = "user_friends_n.txt";
+	private static String ratingsDataFile = "ratings04.txt";
+	private static String friendsDataFile = "friends04.txt";
+	private static boolean generateNetworkAndRatings = true;
+
+	private static String splitBy = " ";
 
 	// 2D arrays to store the data from the input files
 	private static double[][] trainData;
@@ -40,14 +59,18 @@ public class Recommender {
 
 	// Average neighbourhoodSizes when threshold is used
 	private static double averageSizeOfSimilarityListUsers = 0;
-	private static double averageSizeOfSimilarityListMovies = 0;
+	private static double averageSizeOfSimilarityListItems = 0;
 
-	// ResultSaver class (writes all results to a file
+	// ResultSaver class (writes all results to a file)
 	private static ResultSaver resultSaver;
 
+	// CrossValidator parameters
+	private static double basePercentage = 0.8;
+	private static int repetitions = 1;
+
 	/**
-	 * The main function sets the parameters, runs read the training and test
-	 * data and runs the predictors.
+	 * The main function sets the parameters, reads the training and test data
+	 * and runs the predictors.
 	 * 
 	 * @param args
 	 *            (not needed)
@@ -57,6 +80,34 @@ public class Recommender {
 		// Set the parameters. Unless the parameter is mentioned in the text
 		// file, the default is set.
 		ParseInput.setParameters(parameterFile);
+
+		if (args.length != 0) {
+			rootPath = args[0];
+			parameterFile = args[1];
+			resultFile = args[2];
+
+		}
+
+		if (generateNetworkAndRatings) {
+
+			RatingGenerator.main(new String[] {
+					rootPath + dataSet + friendsDataFile,
+					rootPath + dataSet + ratingsDataFile });
+
+			CrossValidator.main(new String[] {
+					rootPath + dataSet + ratingsDataFile,
+					Double.toString(basePercentage),
+					Integer.toString(repetitions) });
+
+			trainDataFiles = new String[repetitions];
+			testDataFiles = new String[repetitions];
+
+			for (int i = 1; i <= repetitions; i++) {
+				trainDataFiles[i - 1] = basePercentage + "_set" + i + ".base";
+				testDataFiles[i - 1] = basePercentage + "_set" + i + ".test";
+			}
+
+		}
 
 		if (trainDataFiles.length != testDataFiles.length) {
 			System.err
@@ -93,10 +144,9 @@ public class Recommender {
 			// Run all tests (all combinations of the specified settings)
 			runAllTests(data);
 
-			// Uncomment if you want to write the results to an output file
-			// resultSaver
-			// .writeToFile("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results1.txt");
-
+			if (CREATERESULTFILE) {
+				resultSaver.writeToFile(resultFile);
+			}
 		}
 
 	}
@@ -172,9 +222,9 @@ public class Recommender {
 														+ "\n");
 									else if (predictor.equals("itembased"))
 										System.out
-												.println("Average neighbourhood size for movies: "
+												.println("Average neighbourhood size for items: "
 														+ String.format("%.2f",
-																averageSizeOfSimilarityListMovies)
+																averageSizeOfSimilarityListItems)
 														+ "\n");
 								}
 							}
@@ -328,7 +378,7 @@ public class Recommender {
 			System.out.println("========================================");
 			System.out.println("Predictions from " + predictor);
 			System.out.println("========================================");
-			System.out.println("User \t Movie \t Rating  Prediction");
+			System.out.println("User \t Item \t Rating  Prediction");
 			for (int i = 0; i < N; i++) {
 				System.out.println((String.format(
 						"%d \t %d \t %.3f \t %.3f \n", (int) testData[i][0],
@@ -349,11 +399,11 @@ public class Recommender {
 
 	/**
 	 * Reads in data from a file and converts them into an integer array Data
-	 * are expected to be of the form (user, movie, rating)_i
+	 * are expected to be of the form (user, item, rating)_i
 	 * 
 	 * @param fileName
 	 *            : the data file
-	 * @return an integer array (user, movie, rating)_i
+	 * @return an integer array (user, item, rating)_i
 	 */
 	public static double[][] readData(String fileName) {
 		BufferedReader b;
@@ -368,7 +418,7 @@ public class Recommender {
 			}
 			b.close();
 
-			// data is of the form: (userID, movieID,rating)_i
+			// data is of the form: (userID, itemID,rating)_i
 			data = new double[N][3];
 			int count = 0;
 			b = new BufferedReader(new FileReader(fileName));
@@ -427,7 +477,7 @@ public class Recommender {
 			b = new BufferedReader(new FileReader(fileName));
 
 			for (int i = 0; i < N; i++) {
-				String[] s = b.readLine().split("\t");
+				String[] s = b.readLine().split(splitBy);
 				try {
 					friendsList[i][0] = new Integer(s[0]);
 					friendsList[i][1] = new Integer(s[1]);
@@ -498,12 +548,16 @@ public class Recommender {
 	}
 
 	// Setters for averages (used by UserBasedPredictor/ItemBasedPredictor)
-	public static void setAverageSizeOfSimilarityListMovies(double size) {
-		averageSizeOfSimilarityListMovies = size;
+	public static void setAverageSizeOfSimilarityListItems(double size) {
+		averageSizeOfSimilarityListItems = size;
 	}
 
 	public static void setAverageSizeOfSimilarityListUsers(double size) {
 		averageSizeOfSimilarityListUsers = size;
+	}
+
+	public static String getDataSet() {
+		return dataSet;
 	}
 
 }

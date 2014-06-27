@@ -20,27 +20,40 @@ import java.util.TreeMap;
 public class CrossValidator {
 
 	private static double[][] data;
-	private static TreeMap<Integer, HashMap<Integer, Double>> userMovieRatings;
+	private static TreeMap<Integer, HashMap<Integer, Double>> userItemRatings;
+
+	private static String dataSet;
 
 	public static void main(String[] args) {
-		userMovieRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 
-		// data = Recommender.readData("lastfm-2k/user_artists_n.data");
-		data = Recommender.readData("artificial/ratings.txt");
-		initializeUserMovieRatings(data);
+		userItemRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 
-		divide(0.8, 3);
+		dataSet = "artificial/";
+
+		if (args.length != 0) {
+			data = Recommender.readData(args[0]);
+		} else {
+			data = Recommender.readData(dataSet + "ratings01.txt");
+		}
+
+		initializeUserItemRatings(data);
+
+		if (args.length != 0) {
+			divide(Double.parseDouble(args[1]), Integer.parseInt(args[2]));
+		} else {
+			divide(0.8, 3);
+		}
 	}
 
-	public static void initializeUserMovieRatings(double[][] data) {
+	public static void initializeUserItemRatings(double[][] data) {
 		for (int i = 0; i < data.length; i++) {
-			if (userMovieRatings.containsKey((int) data[i][0])) {
-				userMovieRatings.get((int) data[i][0]).put((int) data[i][1],
+			if (userItemRatings.containsKey((int) data[i][0])) {
+				userItemRatings.get((int) data[i][0]).put((int) data[i][1],
 						data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
 				ratings.put((int) data[i][1], data[i][2]);
-				userMovieRatings.put((int) data[i][0], ratings);
+				userItemRatings.put((int) data[i][0], ratings);
 			}
 		}
 	}
@@ -67,18 +80,12 @@ public class CrossValidator {
 
 		for (int i = 1; i <= repetitions; i++) {
 
-			// File baseFile = new File(
-			// "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
-			// + i + ".base");
-			// File testFile = new File(
-			// "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/set"
-			// + i + ".test");
 			File baseFile = new File(
-					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/set"
-							+ i + ".base");
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
+							+ dataSet + basePercentage + "_set" + i + ".base");
 			File testFile = new File(
-					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/set"
-							+ i + ".test");
+					"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
+							+ dataSet + basePercentage + "_set" + i + ".test");
 			FileWriter baseFileWriter;
 			FileWriter testFileWriter;
 
@@ -91,16 +98,16 @@ public class CrossValidator {
 				BufferedWriter testBufferedWriter = new BufferedWriter(
 						testFileWriter);
 
-				for (Integer user : userMovieRatings.keySet()) {
+				for (Integer user : userItemRatings.keySet()) {
 
-					int N = userMovieRatings.get(user).size();
+					int N = userItemRatings.get(user).size();
 
 					int baseMax = Math.round((float) (N * basePercentage));
 					int testMax = N - baseMax;
 
 					int baseSize = 0, testSize = 0;
 
-					for (Map.Entry<Integer, Double> entry : userMovieRatings
+					for (Map.Entry<Integer, Double> entry : userItemRatings
 							.get(user).entrySet()) {
 						String line = user + "\t" + entry.getKey() + "\t"
 								+ entry.getValue();

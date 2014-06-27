@@ -4,8 +4,8 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import predictors.ItemBasedPredictor;
 import rec.Data;
-import rec.ItemBasedPredictor;
 
 public class ItemBasedTest {
 
@@ -26,7 +26,7 @@ public class ItemBasedTest {
 				data);
 		p.train();
 
-		// Test cosine similarities between all movies
+		// Test cosine similarities between all items
 
 		assertEquals(0.99624, p.computeSimilarity(1, 2), epsilon);
 		assertEquals(0.99388, p.computeSimilarity(1, 3), epsilon);
