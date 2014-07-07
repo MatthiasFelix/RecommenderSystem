@@ -20,7 +20,7 @@ public class ItemBasedTest {
 	@Test
 	public void testItemBasedPredictor() {
 
-		Data data = new Data(trainData);
+		Data data = new Data(trainData, "");
 
 		ItemBasedPredictor p = new ItemBasedPredictor(20, "cosine", "weighted",
 				data);

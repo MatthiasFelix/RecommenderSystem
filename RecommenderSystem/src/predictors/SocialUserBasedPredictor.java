@@ -119,6 +119,7 @@ public class SocialUserBasedPredictor extends Predictor {
 		ArrayList<Double> similaritiesList = new ArrayList<Double>();
 		ArrayList<Double> ratingsList = new ArrayList<Double>();
 		ArrayList<Double> averageList = new ArrayList<Double>();
+		ArrayList<Double> centralitiesList = new ArrayList<Double>();
 
 		if (userSimilarities.get(userID) == null) {
 			return prediction;
@@ -132,6 +133,16 @@ public class SocialUserBasedPredictor extends Predictor {
 						.get(itemID));
 				averageList.add(data.getAverageUserRatings().get(
 						friend.getKey()));
+				if (pMetric.equals("centrality0")) {
+					centralitiesList.add(data.getCentralityScores(0).get(
+							friend.getKey()));
+				} else if (pMetric.equals("centrality1")) {
+					centralitiesList.add(data.getCentralityScores(1).get(
+							friend.getKey()));
+				} else if (pMetric.equals("centrality2")) {
+					centralitiesList.add(data.getCentralityScores(2).get(
+							friend.getKey()));
+				}
 			}
 		}
 
@@ -146,6 +157,10 @@ public class SocialUserBasedPredictor extends Predictor {
 			prediction = Prediction.calculateAdjustedWeightedSum(data
 					.getAverageUserRatings().get(userID), averageList,
 					ratingsList, similaritiesList);
+		} else if (pMetric.startsWith("centrality")) {
+			prediction = Prediction.calculateCentralitySum(data
+					.getAverageUserRatings().get(userID), averageList,
+					ratingsList, similaritiesList, centralitiesList);
 		}
 
 		if (prediction == 0) {

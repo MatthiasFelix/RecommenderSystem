@@ -1,4 +1,4 @@
-package rec;
+package generator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import rec.Recommender;
 
 public class DataManipulator {
 

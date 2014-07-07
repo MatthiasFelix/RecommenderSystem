@@ -4,10 +4,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.TreeMap;
 
+import cwrapper.CWrapper;
+
 public class Data {
 
 	double[][] data = null;
 	int[][] friends = null;
+
+	private String friendsFile;
+	private String ratingsFile;
 
 	// hash map: userID --> hash map: itemID --> rating
 	private TreeMap<Integer, HashMap<Integer, Double>> userItemRatings = null;
@@ -27,15 +32,24 @@ public class Data {
 	// hash map: userID --> Set of users that are friends of this user
 	private TreeMap<Integer, HashSet<Integer>> userFriends = null;
 
+	// hash map: userID --> centrality score of this user
+	private HashMap<Integer, Double> centralityScores = null;
+
+	private int currentCentralityMode;
+
 	// Data can be initialized either with or without social network data
 	// (friend relations)
-	public Data(double[][] inputData, int[][] inputFriends) {
+	public Data(double[][] inputData, int[][] inputFriends, String friendsFile,
+			String ratingsFile) {
 		friends = inputFriends;
 		data = inputData;
+		this.friendsFile = friendsFile;
+		this.ratingsFile = ratingsFile;
 	}
 
-	public Data(double[][] inputData) {
+	public Data(double[][] inputData, String ratingsFile) {
 		data = inputData;
+		this.ratingsFile = ratingsFile;
 	}
 
 	public void initializeUserItemRatings() {
@@ -128,6 +142,24 @@ public class Data {
 		}
 	}
 
+	public void initializeCentralityScores(int centralityMode) {
+		centralityScores = new HashMap<Integer, Double>();
+		currentCentralityMode = centralityMode;
+
+		CWrapper cwrapper = CWrapper.getInstance();
+		double cent[] = cwrapper.getNormalizedCentrality(friendsFile,
+				centralityMode);
+
+		System.out.println("last key: " + userItemRatings.lastKey());
+		for (int i = 0; i <= userItemRatings.lastKey(); i++) {
+			centralityScores.put(i, cent[i]);
+			if (i == 2100) {
+				System.out.println(cent[i]);
+			}
+		}
+
+	}
+
 	// Getters
 
 	public TreeMap<Integer, HashMap<Integer, Double>> getUserItemRatings() {
@@ -164,6 +196,15 @@ public class Data {
 		if (userFriends == null)
 			initializeUserFriends();
 		return userFriends;
+	}
+
+	public HashMap<Integer, Double> getCentralityScores(int centralityMode) {
+		if (centralityScores == null) {
+			initializeCentralityScores(centralityMode);
+		} else if (centralityMode != currentCentralityMode) {
+			initializeCentralityScores(centralityMode);
+		}
+		return centralityScores;
 	}
 
 }

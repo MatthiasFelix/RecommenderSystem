@@ -20,7 +20,7 @@ public class UserBasedTest {
 	@Test
 	public void testUserBasedPredictor() {
 
-		Data data = new Data(trainData);
+		Data data = new Data(trainData, "");
 
 		UserBasedPredictor p = new UserBasedPredictor(20, "pearson",
 				"adjweighted", data);

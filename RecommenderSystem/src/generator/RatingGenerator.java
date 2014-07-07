@@ -17,6 +17,8 @@ import org.uncommons.maths.random.ExponentialGenerator;
 import org.uncommons.maths.random.GaussianGenerator;
 import org.uncommons.maths.random.MersenneTwisterRNG;
 
+import cwrapper.CWrapper;
+
 public class RatingGenerator {
 
 	// hash map: userID --> hash map: itemID --> rating
@@ -62,8 +64,8 @@ public class RatingGenerator {
 	private static final int ITEMS = 5000;
 	private static final int MIN = 1;
 	private static final int MAX = 5;
-	private static String friendsFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/friends04.txt";
-	private static String ratingFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/ratings04.txt";
+	private static String friendsFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/friends05.txt";
+	private static String ratingFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/ratings05.txt";
 	private static double a = 0.5;
 	private static double b = 0.3;
 	private static double p = 0.5;
@@ -73,14 +75,14 @@ public class RatingGenerator {
 	private static ExponentialGenerator eg;
 	private static MersenneTwisterRNG mt;
 
-	private static native double[] generateGraph(String fileName, int k,
-			int maxCliqueSize, double expFactor, double expMult,
-			int openNodesEnd);
+	// private static native double[] generateGraph(String fileName, int k,
+	// int maxCliqueSize, double expFactor, double expMult,
+	// int openNodesEnd);
 
 	public static void main(String[] args) {
 
-		// System.loadLibrary("graphGenerator");
-		System.load("/home/user/felix/c-library/libgraphGenerator.dylib");
+		// System.loadLibrary("IGraph");
+		// System.load("/home/user/felix/c-library/libgraphGenerator.dylib");
 
 		if (args.length != 0) {
 			friendsFile = args[0];
@@ -284,7 +286,9 @@ public class RatingGenerator {
 	}
 
 	public static void generateGraphAndCommunityStructure() {
-		double[] communities = generateGraph(friendsFile, 1500, 9, 5, 3, 100);
+		CWrapper cwrapper = CWrapper.getInstance();
+		double[] communities = cwrapper.generateGraph(friendsFile, 1500, 9, 5,
+				3, 100);
 
 		communityStructure = new int[communities.length];
 		for (int i = 0; i < communities.length; i++) {

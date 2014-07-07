@@ -1,5 +1,6 @@
 package rec;
 
+import generator.CrossValidator;
 import generator.RatingGenerator;
 
 import java.io.BufferedReader;
@@ -22,13 +23,18 @@ import predictors.UserBasedPredictor;
 public class Recommender {
 
 	private static String rootPath = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/";
+	// private static String rootPath =
+	// "/home/matthias/Documents/jars/RecommenderSystem";
 
-	// private static String parameterFile = "src/rec/parameters.txt";
-	private static String parameterFile = "/home/user/felix/data/parameters.txt";
+	private static String parameterFile = "src/parameters.txt";
+	// private static String parameterFile =
+	// "/home/matthias/Documents/parameters.txt";
 	private static final boolean DEBUG = true;
 
 	private static final boolean CREATERESULTFILE = true;
-	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/results04.txt";
+	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/resultsML.txt";
+	// private static String resultFile =
+	// "/home/matthias/Documents/results/resultsTest.txt";
 
 	// default settings
 	private static boolean logLevel = !DEBUG;
@@ -46,11 +52,11 @@ public class Recommender {
 	private static String[] socialNeighbourhood = { "friends_1" };
 	private static double[] socialThresholds = { 0.2, 0.7 };
 
-	private static String ratingsDataFile = "ratings04.txt";
-	private static String friendsDataFile = "friends04.txt";
-	private static boolean generateNetworkAndRatings = true;
+	private static String ratingsDataFile = "u.data";
+	private static String friendsDataFile = "user_friends_n.txt";
+	private static boolean GENERATENETWORKANDRATINGS = false;
 
-	private static String splitBy = " ";
+	private static String splitBy = "\t";
 
 	// 2D arrays to store the data from the input files
 	private static double[][] trainData;
@@ -65,21 +71,17 @@ public class Recommender {
 	private static ResultSaver resultSaver;
 
 	// CrossValidator parameters
-	private static double basePercentage = 0.8;
-	private static int repetitions = 1;
+	private static int k = 5;
+	private static int repetitions = 3;
 
 	/**
 	 * The main function sets the parameters, reads the training and test data
 	 * and runs the predictors.
 	 * 
 	 * @param args
-	 *            (not needed)
+	 *
 	 */
 	public static void main(String[] args) {
-
-		// Set the parameters. Unless the parameter is mentioned in the text
-		// file, the default is set.
-		ParseInput.setParameters(parameterFile);
 
 		if (args.length != 0) {
 			rootPath = args[0];
@@ -88,30 +90,22 @@ public class Recommender {
 
 		}
 
-		if (generateNetworkAndRatings) {
+		// Set the parameters. Unless the parameter is mentioned in the text
+		// file, the default is set.
+		ParseInput.setParameters(parameterFile);
 
-			RatingGenerator.main(new String[] {
-					rootPath + dataSet + friendsDataFile,
+		if (GENERATENETWORKANDRATINGS) {
+
+			RatingGenerator.main(new String[] { rootPath + dataSet + friendsDataFile,
 					rootPath + dataSet + ratingsDataFile });
 
-			CrossValidator.main(new String[] {
-					rootPath + dataSet + ratingsDataFile,
-					Double.toString(basePercentage),
-					Integer.toString(repetitions) });
-
-			trainDataFiles = new String[repetitions];
-			testDataFiles = new String[repetitions];
-
-			for (int i = 1; i <= repetitions; i++) {
-				trainDataFiles[i - 1] = basePercentage + "_set" + i + ".base";
-				testDataFiles[i - 1] = basePercentage + "_set" + i + ".test";
-			}
+			CrossValidator.main(new String[] { rootPath, dataSet, ratingsDataFile,
+					Integer.toString(k), Integer.toString(repetitions) });
 
 		}
 
 		if (trainDataFiles.length != testDataFiles.length) {
-			System.err
-					.println("The number of train and test files must be equal.");
+			System.err.println("The number of train and test files must be equal.");
 			System.exit(-1);
 		}
 
@@ -139,7 +133,8 @@ public class Recommender {
 			currentTrainSet = trainDataFiles[c];
 			currentTestSet = testDataFiles[c];
 
-			Data data = new Data(trainData, userFriends);
+			Data data = new Data(trainData, userFriends, rootPath + dataSet + friendsDataFile,
+					rootPath + dataSet + ratingsDataFile);
 
 			// Run all tests (all combinations of the specified settings)
 			runAllTests(data);
@@ -165,21 +160,16 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
-									double rmse = runTest(nbHood,
-											(double) size, predictor, smetric,
-											pmetric, "", data);
-									double runTime = ((System.nanoTime() - startTime) / Math
-											.pow(10, 9));
-									System.out
-											.println(String
-													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor, smetric,
-															pmetric, rmse,
-															runTime));
-									resultSaver.putResult(currentTrainSet,
-											currentTestSet, nbHood, size, null,
-											predictor, smetric, pmetric, null,
-											null, rmse, runTime);
+									double rmse = runTest(nbHood, (double) size, predictor,
+											smetric, pmetric, "", data);
+									double runTime = ((System.nanoTime() - startTime) / Math.pow(
+											10, 9));
+									System.out.println(String.format(
+											"%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n", predictor,
+											smetric, pmetric, rmse, runTime));
+									resultSaver.putResult(currentTrainSet, currentTestSet, nbHood,
+											size, null, predictor, smetric, pmetric, null, null,
+											rmse, runTime);
 								}
 							}
 						}
@@ -199,33 +189,24 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
-									double rmse = runTest(nbHood, threshold,
-											predictor, smetric, pmetric, "",
-											data);
-									double runTime = ((System.nanoTime() - startTime) / Math
-											.pow(10, 9));
-									System.out
-											.println(String
-													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor, smetric,
-															pmetric, rmse,
-															runTime));
-									resultSaver.putResult(currentTrainSet,
-											currentTestSet, nbHood, null,
-											threshold, predictor, smetric,
-											pmetric, null, null, rmse, runTime);
+									double rmse = runTest(nbHood, threshold, predictor, smetric,
+											pmetric, "", data);
+									double runTime = ((System.nanoTime() - startTime) / Math.pow(
+											10, 9));
+									System.out.println(String.format(
+											"%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n", predictor,
+											smetric, pmetric, rmse, runTime));
+									resultSaver.putResult(currentTrainSet, currentTestSet, nbHood,
+											null, threshold, predictor, smetric, pmetric, null,
+											null, rmse, runTime);
 									if (predictor.equals("userbased"))
-										System.out
-												.println("Average neighbourhood size for users: "
-														+ String.format("%.2f",
-																averageSizeOfSimilarityListUsers)
-														+ "\n");
+										System.out.println("Average neighbourhood size for users: "
+												+ String.format("%.2f",
+														averageSizeOfSimilarityListUsers) + "\n");
 									else if (predictor.equals("itembased"))
-										System.out
-												.println("Average neighbourhood size for items: "
-														+ String.format("%.2f",
-																averageSizeOfSimilarityListItems)
-														+ "\n");
+										System.out.println("Average neighbourhood size for items: "
+												+ String.format("%.2f",
+														averageSizeOfSimilarityListItems) + "\n");
 								}
 							}
 						}
@@ -245,27 +226,20 @@ public class Recommender {
 							for (String smetric : smetrics) {
 								for (String pmetric : pmetrics) {
 									long startTime = System.nanoTime();
-									double rmse = runTest(nbHood, null,
-											predictor, smetric, pmetric,
-											socialN, data);
-									double runTime = ((System.nanoTime() - startTime) / Math
-											.pow(10, 9));
-									System.out
-											.println(String
-													.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-															predictor, smetric,
-															pmetric, rmse,
-															runTime));
-									resultSaver.putResult(currentTrainSet,
-											currentTestSet, nbHood, null, null,
-											predictor, smetric, pmetric,
-											socialN, null, rmse, runTime);
+									double rmse = runTest(nbHood, null, predictor, smetric,
+											pmetric, socialN, data);
+									double runTime = ((System.nanoTime() - startTime) / Math.pow(
+											10, 9));
+									System.out.println(String.format(
+											"%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n", predictor,
+											smetric, pmetric, rmse, runTime));
+									resultSaver.putResult(currentTrainSet, currentTestSet, nbHood,
+											null, null, predictor, smetric, pmetric, socialN, null,
+											rmse, runTime);
 									if (predictor.equals("socialuser"))
-										System.out
-												.println("Average neighbourhood size for users: "
-														+ String.format("%.2f",
-																averageSizeOfSimilarityListUsers)
-														+ "\n");
+										System.out.println("Average neighbourhood size for users: "
+												+ String.format("%.2f",
+														averageSizeOfSimilarityListUsers) + "\n");
 								}
 							}
 						}
@@ -277,11 +251,9 @@ public class Recommender {
 					System.out.println("Social Neighbourhood: " + socialN);
 					System.out.println("----------------------------------");
 					for (Double socialThreshold : socialThresholds) {
-						System.out
-								.println("----------------------------------");
+						System.out.println("----------------------------------");
 						System.out.println("Threshold: " + socialThreshold);
-						System.out
-								.println("----------------------------------");
+						System.out.println("----------------------------------");
 						System.out
 								.println("Predictor \t\t Similarity metric \t Prediction metric \t RMSE \t\t Run Time (s)\n");
 						for (String predictor : predictors) {
@@ -292,28 +264,20 @@ public class Recommender {
 								for (String smetric : smetrics) {
 									for (String pmetric : pmetrics) {
 										long startTime = System.nanoTime();
-										double rmse = runTest(nbHood,
-												socialThreshold, predictor,
+										double rmse = runTest(nbHood, socialThreshold, predictor,
 												smetric, pmetric, socialN, data);
 										double runTime = ((System.nanoTime() - startTime) / Math
 												.pow(10, 9));
-										System.out
-												.println(String
-														.format("%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
-																predictor,
-																smetric,
-																pmetric, rmse,
-																runTime));
-										resultSaver.putResult(currentTrainSet,
-												currentTestSet, nbHood, null,
-												null, predictor, smetric,
-												pmetric, socialN,
-												socialThreshold, rmse, runTime);
+										System.out.println(String.format(
+												"%s \t\t %s \t\t %s \t\t %.5f \t %.3f\n",
+												predictor, smetric, pmetric, rmse, runTime));
+										resultSaver.putResult(currentTrainSet, currentTestSet,
+												nbHood, null, null, predictor, smetric, pmetric,
+												socialN, socialThreshold, rmse, runTime);
 										if (predictor.equals("socialuser"))
 											System.out
 													.println("Average neighbourhood size for users: "
-															+ String.format(
-																	"%.2f",
+															+ String.format("%.2f",
 																	averageSizeOfSimilarityListUsers)
 															+ "\n");
 									}
@@ -331,9 +295,8 @@ public class Recommender {
 	 * 
 	 * @return root mean square error of the predictions
 	 */
-	public static double runTest(String nbHood, Double threshOrSize,
-			String predictor, String smetric, String pmetric,
-			String socialNeighbourhood, Data d) {
+	public static double runTest(String nbHood, Double threshOrSize, String predictor,
+			String smetric, String pmetric, String socialNeighbourhood, Data d) {
 
 		Predictor p = null;
 
@@ -343,23 +306,20 @@ public class Recommender {
 			p = new UserAverageBasedPredictor(d);
 		} else if (predictor.equals("userbased")) {
 			if (nbHood.equals("size"))
-				p = new UserBasedPredictor(threshOrSize.intValue(), smetric,
-						pmetric, d);
+				p = new UserBasedPredictor(threshOrSize.intValue(), smetric, pmetric, d);
 			else
 				p = new UserBasedPredictor(threshOrSize, smetric, pmetric, d);
 		} else if (predictor.equals("itembased")) {
 			if (nbHood.equals("size"))
-				p = new ItemBasedPredictor(threshOrSize.intValue(), smetric,
-						pmetric, d);
+				p = new ItemBasedPredictor(threshOrSize.intValue(), smetric, pmetric, d);
 			else
 				p = new ItemBasedPredictor(threshOrSize, smetric, pmetric, d);
 		} else if (predictor.equals("socialuser")) {
 			if (nbHood.equals("social")) {
-				p = new SocialUserBasedPredictor(smetric, pmetric,
-						socialNeighbourhood, d);
+				p = new SocialUserBasedPredictor(smetric, pmetric, socialNeighbourhood, d);
 			} else if (nbHood.equals("socialthreshold")) {
-				p = new SocialUserBasedPredictor(smetric, pmetric,
-						socialNeighbourhood, threshOrSize, d);
+				p = new SocialUserBasedPredictor(smetric, pmetric, socialNeighbourhood,
+						threshOrSize, d);
 			}
 		}
 
@@ -370,8 +330,7 @@ public class Recommender {
 		int N = testData.length;
 		double[] predictions = new double[N];
 		for (int i = 0; i < N; i++) {
-			predictions[i] = p.predict((int) testData[i][0],
-					(int) testData[i][1]);
+			predictions[i] = p.predict((int) testData[i][0], (int) testData[i][1]);
 		}
 
 		if (logLevel == DEBUG) {
@@ -380,17 +339,17 @@ public class Recommender {
 			System.out.println("========================================");
 			System.out.println("User \t Item \t Rating  Prediction");
 			for (int i = 0; i < N; i++) {
-				System.out.println((String.format(
-						"%d \t %d \t %.3f \t %.3f \n", (int) testData[i][0],
-						(int) testData[i][1], testData[i][2], predictions[i])));
+				System.out
+						.println((String.format("%d \t %d \t %.3f \t %.3f \n",
+								(int) testData[i][0], (int) testData[i][1], testData[i][2],
+								predictions[i])));
 			}
 		}
 
 		// compute the root mean squared error
 		double RMSE = 0;
 		for (int i = 0; i < N; i++) {
-			RMSE += (predictions[i] - testData[i][2])
-					* (predictions[i] - testData[i][2]);
+			RMSE += (predictions[i] - testData[i][2]) * (predictions[i] - testData[i][2]);
 		}
 		RMSE = Math.sqrt(RMSE / (double) N);
 
@@ -428,8 +387,7 @@ public class Recommender {
 					try {
 						data[count][i] = new Integer(s[i]);
 					} catch (NumberFormatException nfe) {
-						System.err
-								.println("input data must be of type integer.");
+						System.err.println("input data must be of type integer.");
 						nfe.printStackTrace();
 					}
 
@@ -446,8 +404,7 @@ public class Recommender {
 
 		} catch (FileNotFoundException e) {
 			System.err
-					.println("Couldn't read the parameter file. Check the file name: "
-							+ fileName);
+					.println("Couldn't read the parameter file. Check the file name: " + fileName);
 			e.printStackTrace();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -513,6 +470,15 @@ public class Recommender {
 
 	public static void setTestDataFiles(String[] testDataFiles) {
 		Recommender.testDataFiles = testDataFiles;
+	}
+
+	public static void applyKFold(String[] fileNames) {
+		Recommender.trainDataFiles = new String[fileNames.length];
+		Recommender.testDataFiles = new String[fileNames.length];
+		for (int i = 0; i < fileNames.length; i++) {
+			Recommender.trainDataFiles[i] = fileNames + ".base";
+			Recommender.testDataFiles[i] = fileNames + ".test";
+		}
 	}
 
 	public static void setNeighbourhood(String[] n) {

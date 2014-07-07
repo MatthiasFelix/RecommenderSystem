@@ -186,6 +186,7 @@ public class UserBasedPredictor extends Predictor {
 		ArrayList<Double> similaritiesList = new ArrayList<Double>();
 		ArrayList<Double> ratingsList = new ArrayList<Double>();
 		ArrayList<Double> averageList = new ArrayList<Double>();
+		ArrayList<Double> centralitiesList = new ArrayList<Double>();
 
 		for (Map.Entry<Integer, Double> neighbour : userSimilarities
 				.get(userID).entrySet()) {
@@ -195,6 +196,16 @@ public class UserBasedPredictor extends Predictor {
 						.get(neighbour.getKey()).get(itemID));
 				averageList.add(data.getAverageUserRatings().get(
 						neighbour.getKey()));
+				if (pMetric.equals("centrality0")) {
+					centralitiesList.add(data.getCentralityScores(0).get(
+							neighbour.getKey()));
+				} else if (pMetric.equals("centrality1")) {
+					centralitiesList.add(data.getCentralityScores(1).get(
+							neighbour.getKey()));
+				} else if (pMetric.equals("centrality2")) {
+					centralitiesList.add(data.getCentralityScores(2).get(
+							neighbour.getKey()));
+				}
 			}
 		}
 
@@ -209,6 +220,10 @@ public class UserBasedPredictor extends Predictor {
 			prediction = Prediction.calculateAdjustedWeightedSum(data
 					.getAverageUserRatings().get(userID), averageList,
 					ratingsList, similaritiesList);
+		} else if (pMetric.startsWith("centrality")) {
+			prediction = Prediction.calculateCentralitySum(data
+					.getAverageUserRatings().get(userID), averageList,
+					ratingsList, similaritiesList, centralitiesList);
 		}
 
 		if (prediction == 0) {

@@ -11,7 +11,7 @@
 #include <gsl/gsl_randist.h>
 #include <jni.h>
 
-JNIEXPORT jdoubleArray JNICALL Java_generator_RatingGenerator_generateGraph(
+JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 		JNIEnv * env, jobject jobj, jstring fileName, jint k,
 		jint maxCliqueSize, jdouble expFactor, jdouble expMult,
 		jint openNodesEnd) {
@@ -266,13 +266,18 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_getCentrality(
 	igraph_vector_t res;
 	igraph_vector_init(&res, 0);
 
-	if (centralityMode == 0) {
+	if ((int) centralityMode == 0) {
 		igraph_degree(&graph, &res, igraph_vss_all(), IGRAPH_ALL, 0);
-	} else if (centralityMode == 1) {
+	} else if ((int) centralityMode == 1) {
 		igraph_closeness(&graph, &res, igraph_vss_all(), IGRAPH_ALL, 0, 1);
-	} else if (centralityMode == 2) {
+	} else if ((int) centralityMode == 2) {
 		igraph_betweenness(&graph, &res, igraph_vss_all(), 0, 0, 0);
 	}
+
+	int v = igraph_vcount(&graph);
+	int resSize = igraph_vector_size(&res);
+
+	printf("v: %i, resSize: %i\n", v, resSize);
 
 	jdouble resArray[igraph_vector_size(&res)];
 
