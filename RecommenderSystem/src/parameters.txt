@@ -6,32 +6,28 @@
 loglevel default
 
 #data set (lastfm-2k, ml-100k, artificial)
-dataset ml-100k
+dataset lastfm-2k
 
 #training data (e.g. ua.base) (list of all training sets to be used)
-#traindata set1.base set2.base set3.base set4.base set5.base set6.base set7.base set8.base set9.base set10.base set11.base set12.base set13.base set14.base set15.base set16.base set17.base set18.base set19.base set20.base
-#traindata 0.1_set1.base 0.1_set2.base 0.1_set3.base 0.1_set4.base 0.1_set5.base 0.2_set1.base 0.2_set2.base 0.2_set3.base 0.2_set4.base 0.2_set5.base 0.3_set1.base 0.3_set2.base 0.3_set3.base 0.3_set4.base 0.3_set5.base 0.4_set1.base 0.4_set2.base 0.4_set3.base 0.4_set4.base 0.4_set5.base 0.5_set1.base 0.5_set2.base 0.5_set3.base 0.5_set4.base 0.5_set5.base 0.6_set1.base 0.6_set2.base 0.6_set3.base 0.6_set4.base 0.6_set5.base 0.7_set1.base 0.7_set2.base 0.7_set3.base 0.7_set4.base 0.7_set5.base 0.8_set1.base 0.8_set2.base 0.8_set3.base 0.8_set4.base 0.8_set5.base 0.9_set1.base 0.9_set2.base 0.9_set3.base 0.9_set4.base 0.9_set5.base
 traindata u1.base u2.base u3.base u4.base u5.base 
 
 #test data (e.g. ua.test) (list of all test sets to be used)
-#testdata set1.test set2.test set3.test set4.test set5.test set6.test set7.test set8.test set9.test set10.test set11.test set12.test set13.test set14.test set15.test set16.test set17.test set18.test set19.test set20.test
-#testdata 0.1_set1.test 0.1_set2.test 0.1_set3.test 0.1_set4.test 0.1_set5.test 0.2_set1.test 0.2_set2.test 0.2_set3.test 0.2_set4.test 0.2_set5.test 0.3_set1.test 0.3_set2.test 0.3_set3.test 0.3_set4.test 0.3_set5.test 0.4_set1.test 0.4_set2.test 0.4_set3.test 0.4_set4.test 0.4_set5.test 0.5_set1.test 0.5_set2.test 0.5_set3.test 0.5_set4.test 0.5_set5.test 0.6_set1.test 0.6_set2.test 0.6_set3.test 0.6_set4.test 0.6_set5.test 0.7_set1.test 0.7_set2.test 0.7_set3.test 0.7_set4.test 0.7_set5.test 0.8_set1.test 0.8_set2.test 0.8_set3.test 0.8_set4.test 0.8_set5.test 0.9_set1.test 0.9_set2.test 0.9_set3.test 0.9_set4.test 0.9_set5.test
 testdata u1.test u2.test u3.test u4.test u5.test
 
 #neighbourhood (size, threshold, social, socialthreshold)
-neighbourhood size threshold
+neighbourhood size
 
 #neighbourhoodSizes
-nsizes 1 2 5 10 20 50 100 200 400 600 800 1000
+nsizes 1 2 5 10 15 20 30 40 50 60 70
 
 #thresholds
-thresholds 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+thresholds 0.0 0.2 0.4 0.6 0.8 1.0
 
 #predictor algorithms (averagebased, useraverage, userbased, itembased, socialuser)
 predictors userbased
 
 #similarity metrics (cosine, pearson)
-smetrics cosine
+smetrics cosine pearson
 
 #prediction metrics (weighted, adjusted, adjweighted, centrality0, centrality1, centrality2)
 pmetrics adjweighted
@@ -40,4 +36,4 @@ pmetrics adjweighted
 socialneighbourhood friends_1 friends_2
 
 #social thresholds
-socialthreshold 0.2 0.5 0.8
+socialthreshold 0.0 0.2 0.4 0.6 0.8 1.0

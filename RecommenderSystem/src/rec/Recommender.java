@@ -1,7 +1,6 @@
 package rec;
 
 import generator.CrossValidator;
-import generator.RatingGenerator;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -23,18 +22,13 @@ import predictors.UserBasedPredictor;
 public class Recommender {
 
 	private static String rootPath = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/";
-	// private static String rootPath =
-	// "/home/matthias/Documents/jars/RecommenderSystem";
 
 	private static String parameterFile = "src/parameters.txt";
-	// private static String parameterFile =
-	// "/home/matthias/Documents/parameters.txt";
+
 	private static final boolean DEBUG = true;
 
-	private static final boolean CREATERESULTFILE = true;
-	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/resultsML.txt";
-	// private static String resultFile =
-	// "/home/matthias/Documents/results/resultsTest.txt";
+	private static final boolean CREATERESULTFILE = false;
+	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_USERBASED_N_250714.txt";
 
 	// default settings
 	private static boolean logLevel = !DEBUG;
@@ -52,11 +46,11 @@ public class Recommender {
 	private static String[] socialNeighbourhood = { "friends_1" };
 	private static double[] socialThresholds = { 0.2, 0.7 };
 
-	private static String ratingsDataFile = "u.data";
+	private static String ratingsDataFile = "user_artists_n.data";
 	private static String friendsDataFile = "user_friends_n.txt";
-	private static boolean GENERATENETWORKANDRATINGS = false;
+	private static boolean GENERATENETWORKANDRATINGS = true;
 
-	private static String splitBy = "\t";
+	private static String splitBy = " ";
 
 	// 2D arrays to store the data from the input files
 	private static double[][] trainData;
@@ -72,7 +66,11 @@ public class Recommender {
 
 	// CrossValidator parameters
 	private static int k = 5;
-	private static int repetitions = 3;
+	private static int repetitions = 1;
+
+	// private static HashMap<Integer, HashSet<Double>> errors;
+	// private static HashMap<Integer, Double> errorDifference = new
+	// HashMap<Integer, Double>();
 
 	/**
 	 * The main function sets the parameters, reads the training and test data
@@ -87,7 +85,9 @@ public class Recommender {
 			rootPath = args[0];
 			parameterFile = args[1];
 			resultFile = args[2];
-
+		}
+		if (args.length > 3) {
+			ratingsDataFile = args[3];
 		}
 
 		// Set the parameters. Unless the parameter is mentioned in the text
@@ -96,8 +96,9 @@ public class Recommender {
 
 		if (GENERATENETWORKANDRATINGS) {
 
-			RatingGenerator.main(new String[] { rootPath + dataSet + friendsDataFile,
-					rootPath + dataSet + ratingsDataFile });
+			// RatingGenerator.main(new String[] { rootPath + dataSet +
+			// friendsDataFile,
+			// rootPath + dataSet + ratingsDataFile });
 
 			CrossValidator.main(new String[] { rootPath, dataSet, ratingsDataFile,
 					Integer.toString(k), Integer.toString(repetitions) });
@@ -139,6 +140,23 @@ public class Recommender {
 			// Run all tests (all combinations of the specified settings)
 			runAllTests(data);
 
+			// Test users
+			/*
+			 * File f = new File(rootPath + "results/userErrors01.txt");
+			 * 
+			 * try {
+			 * 
+			 * BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+			 * 
+			 * for (Map.Entry<Integer, Double> entry :
+			 * errorDifference.entrySet()) { System.out.println("User " +
+			 * entry.getKey() + ": Diff = " + entry.getValue());
+			 * bw.write(entry.getKey() + "\t" + entry.getValue() + "\n"); }
+			 * 
+			 * bw.close();
+			 * 
+			 * } catch (IOException e) { e.printStackTrace(); }
+			 */
 			if (CREATERESULTFILE) {
 				resultSaver.writeToFile(resultFile);
 			}
@@ -346,13 +364,35 @@ public class Recommender {
 			}
 		}
 
+		// errors = new HashMap<Integer, HashSet<Double>>();
+
 		// compute the root mean squared error
 		double RMSE = 0;
 		for (int i = 0; i < N; i++) {
-			RMSE += (predictions[i] - testData[i][2]) * (predictions[i] - testData[i][2]);
+			double error = (predictions[i] - testData[i][2]) * (predictions[i] - testData[i][2]);
+			/*
+			 * if (!errors.containsKey(testData[i][0])) { HashSet<Double> hs =
+			 * new HashSet<Double>(); errors.put((int) testData[i][0], hs); }
+			 * errors.get((int) testData[i][0]).add(error);
+			 */
+			RMSE += error;
 		}
 		RMSE = Math.sqrt(RMSE / (double) N);
 
+		/*
+		 * for (Map.Entry<Integer, HashSet<Double>> entry : errors.entrySet()) {
+		 * if (entry.getValue().size() != 0) { double e = 0.0; for (Double error
+		 * : entry.getValue()) e += error; e /= entry.getValue().size(); e =
+		 * Math.sqrt(e); if (!errorDifference.containsKey(entry.getKey()))
+		 * errorDifference.put(entry.getKey(), 0.0); if
+		 * (predictor.equals("userbased")) { errorDifference
+		 * .replace(entry.getKey(), errorDifference.get(entry.getKey()) + e); }
+		 * else if (predictor.equals("socialuser")) { errorDifference
+		 * .replace(entry.getKey(), errorDifference.get(entry.getKey()) - e); }
+		 * System.out.println("User " + entry.getKey() + ": " + e); } else {
+		 * System.out.println("\nUser " + entry.getKey() +
+		 * " has no predictions.\n"); } }
+		 */
 		return RMSE;
 	}
 
@@ -476,8 +516,8 @@ public class Recommender {
 		Recommender.trainDataFiles = new String[fileNames.length];
 		Recommender.testDataFiles = new String[fileNames.length];
 		for (int i = 0; i < fileNames.length; i++) {
-			Recommender.trainDataFiles[i] = fileNames + ".base";
-			Recommender.testDataFiles[i] = fileNames + ".test";
+			Recommender.trainDataFiles[i] = fileNames[i] + ".base";
+			Recommender.testDataFiles[i] = fileNames[i] + ".test";
 		}
 	}
 

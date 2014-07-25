@@ -244,8 +244,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 			igraph_vector_size(&membership), membArray);  // copy
 	return outJNIArray;
 
-	return membArray;
-
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_getCentrality(
@@ -290,6 +288,54 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_getCentrality(
 	}
 	(*env)->SetDoubleArrayRegion(env, outJNIArray, 0, igraph_vector_size(&res),
 			resArray);  // copy
+	return outJNIArray;
+
+}
+
+JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_getCommunities(
+		JNIEnv * env, jobject jobi, jstring fileName, jint community) {
+
+	igraph_t graph;
+
+	const char *graphfile = (*env)->GetStringUTFChars(env, fileName, NULL);
+	if (NULL == graphfile) {
+		return NULL;
+	}
+
+	FILE* file;
+	file = fopen(graphfile, "r");
+
+	igraph_read_graph_edgelist(&graph, file, 0, 0);
+
+	igraph_vector_t res;
+	igraph_vector_init(&res, 0);
+
+	// Community structure part
+	igraph_vector_t modularity, membership;
+	igraph_matrix_t merges;
+	igraph_vector_init(&modularity, 0);
+	igraph_vector_init(&membership, 0);
+	igraph_matrix_init(&merges, 0, 0);
+
+	if ((int) community == 0) {
+		igraph_community_walktrap(&graph, 0, 4, &merges, &modularity,
+				&membership);
+	} else if ((int) community == 1) {
+		igraph_community_fastgreedy(&graph, 0, &merges, &modularity,
+				&membership);
+	}
+
+	jdouble membArray[igraph_vector_size(&membership)];
+
+	igraph_vector_copy_to(&membership, (igraph_real_t*) membArray);
+
+	jdoubleArray outJNIArray = (*env)->NewDoubleArray(env,
+			igraph_vector_size(&membership));  // allocate
+	if (NULL == outJNIArray) {
+		return NULL;
+	}
+	(*env)->SetDoubleArrayRegion(env, outJNIArray, 0,
+			igraph_vector_size(&membership), membArray);  // copy
 	return outJNIArray;
 
 }

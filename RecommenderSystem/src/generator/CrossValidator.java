@@ -45,9 +45,9 @@ public class CrossValidator {
 			// Set parameters manually here;
 			rootPath = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/";
 			dataSet = "artificial/";
-			ratingsFile = "ratingsCV.txt";
-			k = 3;
-			repetitions = 3;
+			ratingsFile = "_50_0.15_0.0_0.1.txt";
+			k = 5;
+			repetitions = 1;
 		}
 
 		data = Recommender.readData(dataSet + ratingsFile);
@@ -114,44 +114,43 @@ public class CrossValidator {
 					}
 
 				}
+			}
+			// Now the different partitions are made and the files have to
+			// be created.
 
-				// Now the different partitions are made and the files have to
-				// be created.
+			for (int j = 1; j <= k; j++) {
+				String fileName = ratingsFile.split(".txt")[0] + "__" + i + "_" + j;
+				fileNames[(i - 1) * k + (j - 1)] = fileName;
+				File base = new File(rootPath + dataSet + fileName + ".base");
+				File test = new File(rootPath + dataSet + fileName + ".test");
 
-				for (int j = 1; j <= k; j++) {
-					String fileName = i + "_" + j;
-					fileNames[(i - 1) * k + (j - 1)] = fileName;
-					File base = new File(rootPath + dataSet + fileName + ".base");
-					File test = new File(rootPath + dataSet + fileName + ".test");
+				FileWriter baseFileWriter;
+				FileWriter testFileWriter;
 
-					FileWriter baseFileWriter;
-					FileWriter testFileWriter;
+				try {
 
-					try {
+					baseFileWriter = new FileWriter(base);
+					testFileWriter = new FileWriter(test);
+					BufferedWriter baseBufferedWriter = new BufferedWriter(baseFileWriter);
+					BufferedWriter testBufferedWriter = new BufferedWriter(testFileWriter);
 
-						baseFileWriter = new FileWriter(base);
-						testFileWriter = new FileWriter(test);
-						BufferedWriter baseBufferedWriter = new BufferedWriter(baseFileWriter);
-						BufferedWriter testBufferedWriter = new BufferedWriter(testFileWriter);
-
-						for (int l = 1; l <= k; l++) {
-							if (l == j) {
-								testBufferedWriter.write(files[l - 1]);
-							} else {
-								baseBufferedWriter.write(files[l - 1]);
-							}
+					for (int l = 1; l <= k; l++) {
+						if (l == j) {
+							testBufferedWriter.write(files[l - 1]);
+						} else {
+							baseBufferedWriter.write(files[l - 1]);
 						}
-
-						baseBufferedWriter.close();
-						testBufferedWriter.close();
-
-					} catch (IOException e) {
-						e.printStackTrace();
 					}
 
+					baseBufferedWriter.close();
+					testBufferedWriter.close();
+
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
 
 			}
+
 		}
 
 		return fileNames;

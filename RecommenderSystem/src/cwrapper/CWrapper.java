@@ -12,11 +12,12 @@ public class CWrapper {
 		return instance;
 	}
 
-	public native double[] generateGraph(String fileName, int k,
-			int maxCliqueSize, double expFactor, double expMult,
-			int openNodesEnd);
+	public native double[] generateGraph(String fileName, int k, int maxCliqueSize,
+			double expFactor, double expMult, int openNodesEnd);
 
-	private native double[] getCentrality(String fileName, int centralityMode);
+	public native double[] getCentrality(String fileName, int centralityMode);
+
+	public native double[] getCommunities(String fileName, int community);
 
 	/**
 	 * This method calculates a centrality score for each node in the graph.
