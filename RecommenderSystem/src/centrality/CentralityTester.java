@@ -36,7 +36,7 @@ public class CentralityTester {
 	private static Comparator<Map.Entry<Integer, Double>> comparator;
 
 	private static Data data;
-	
+
 	private static int influencerSize = 7;
 
 	public static void main(String[] args) {
@@ -181,6 +181,10 @@ public class CentralityTester {
 		System.out.println("influencer-community: " + df.format(influencerCommunityDifference));
 		System.out.println("influencer-network: " + df.format(influencerNetworkDifference));
 		System.out.println("community-network: " + df.format(communityNetworkDifference));
+
+		for (Map.Entry<Integer, Double> entry : sortedErrorDifferences) {
+			System.out.println("Com " + userCommunity.get(entry.getKey()));
+		}
 
 	}
 

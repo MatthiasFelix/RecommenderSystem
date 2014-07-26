@@ -1,6 +1,7 @@
 package rec;
 
 import generator.CrossValidator;
+import generator.RatingGenerator;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -25,10 +26,9 @@ public class Recommender {
 
 	private static String parameterFile = "src/parameters.txt";
 
-	private static final boolean DEBUG = true;
-
-	private static final boolean CREATERESULTFILE = false;
 	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_USERBASED_N_250714.txt";
+
+	private static final boolean DEBUG = true;
 
 	// default settings
 	private static boolean logLevel = !DEBUG;
@@ -48,9 +48,12 @@ public class Recommender {
 
 	private static String ratingsDataFile = "user_artists_n.data";
 	private static String friendsDataFile = "user_friends_n.txt";
-	private static boolean GENERATENETWORKANDRATINGS = true;
 
-	private static String splitBy = " ";
+	private static final boolean GENERATENETWORKANDRATINGS = false;
+	private static final boolean CROSSVALIDATE = false;
+	private static final boolean CREATERESULTFILE = false;
+
+	private static String splitBy = "\t";
 
 	// 2D arrays to store the data from the input files
 	private static double[][] trainData;
@@ -60,6 +63,8 @@ public class Recommender {
 	// Average neighbourhoodSizes when threshold is used
 	private static double averageSizeOfSimilarityListUsers = 0;
 	private static double averageSizeOfSimilarityListItems = 0;
+
+	private static int averageUsers = 0;
 
 	// ResultSaver class (writes all results to a file)
 	private static ResultSaver resultSaver;
@@ -95,14 +100,13 @@ public class Recommender {
 		ParseInput.setParameters(parameterFile);
 
 		if (GENERATENETWORKANDRATINGS) {
+			RatingGenerator.main(new String[] { rootPath + dataSet + friendsDataFile,
+					rootPath + dataSet + ratingsDataFile });
+		}
 
-			// RatingGenerator.main(new String[] { rootPath + dataSet +
-			// friendsDataFile,
-			// rootPath + dataSet + ratingsDataFile });
-
+		if (CROSSVALIDATE) {
 			CrossValidator.main(new String[] { rootPath, dataSet, ratingsDataFile,
 					Integer.toString(k), Integer.toString(repetitions) });
-
 		}
 
 		if (trainDataFiles.length != testDataFiles.length) {
@@ -344,12 +348,19 @@ public class Recommender {
 		// train the predictor
 		p.train();
 
+		averageSizeOfSimilarityListUsers = 0;
+		averageUsers = 0;
+
 		// compute the predictions
 		int N = testData.length;
 		double[] predictions = new double[N];
 		for (int i = 0; i < N; i++) {
 			predictions[i] = p.predict((int) testData[i][0], (int) testData[i][1]);
 		}
+
+		System.out.println("Number of predictions N: " + N);
+		System.out.println("Average sim size: " + (averageSizeOfSimilarityListUsers / N));
+		System.out.println("Users where average is used: " + averageUsers);
 
 		if (logLevel == DEBUG) {
 			System.out.println("========================================");
@@ -560,6 +571,14 @@ public class Recommender {
 
 	public static void setAverageSizeOfSimilarityListUsers(double size) {
 		averageSizeOfSimilarityListUsers = size;
+	}
+
+	public static void addSimilarityListSize(double size) {
+		averageSizeOfSimilarityListUsers += size;
+	}
+
+	public static void addAverageUser() {
+		averageUsers++;
 	}
 
 	public static String getDataSet() {

@@ -32,8 +32,7 @@ public class UserBasedPredictor extends Predictor {
 
 	// Depending on which constructor is used, the algorithm runs with either a
 	// neighbourhood size or a threshold
-	public UserBasedPredictor(int neighbourhoodSize, String sMetric,
-			String pMetric, Data d) {
+	public UserBasedPredictor(int neighbourhoodSize, String sMetric, String pMetric, Data d) {
 		this.data = d;
 		this.neighbourhood = "size";
 		this.size = neighbourhoodSize;
@@ -43,16 +42,14 @@ public class UserBasedPredictor extends Predictor {
 		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
 
 		comparator = new Comparator<Map.Entry<Integer, Double>>() {
-			public int compare(Map.Entry<Integer, Double> o1,
-					Map.Entry<Integer, Double> o2) {
+			public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
 				return (o1.getValue()).compareTo(o2.getValue());
 			}
 		};
 
 	}
 
-	public UserBasedPredictor(double threshold, String sMetric, String pMetric,
-			Data d) {
+	public UserBasedPredictor(double threshold, String sMetric, String pMetric, Data d) {
 		this.data = d;
 		this.neighbourhood = "threshold";
 		this.threshold = threshold;
@@ -62,8 +59,7 @@ public class UserBasedPredictor extends Predictor {
 		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
 
 		comparator = new Comparator<Map.Entry<Integer, Double>>() {
-			public int compare(Map.Entry<Integer, Double> o1,
-					Map.Entry<Integer, Double> o2) {
+			public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
 				return (o1.getValue()).compareTo(o2.getValue());
 			}
 		};
@@ -86,8 +82,7 @@ public class UserBasedPredictor extends Predictor {
 		double sim = 0;
 
 		for (Integer user1 : data.getItemsByUser().keySet()) {
-			for (Integer user2 : data.getItemsByUser().tailMap(user1, false)
-					.keySet()) {
+			for (Integer user2 : data.getItemsByUser().tailMap(user1, false).keySet()) {
 
 				sim = computeSimilarity(user1, user2);
 
@@ -148,13 +143,11 @@ public class UserBasedPredictor extends Predictor {
 
 		// Calculate the average size of the similarity lists
 		int similaritiesCount = 0;
-		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities
-				.entrySet()) {
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities.entrySet()) {
 			similaritiesCount += entry.getValue().size();
 		}
-		Recommender
-				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
-						/ (double) userSimilarities.size());
+		Recommender.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
+				/ (double) userSimilarities.size());
 
 	}
 
@@ -188,45 +181,52 @@ public class UserBasedPredictor extends Predictor {
 		ArrayList<Double> averageList = new ArrayList<Double>();
 		ArrayList<Double> centralitiesList = new ArrayList<Double>();
 
-		for (Map.Entry<Integer, Double> neighbour : userSimilarities
-				.get(userID).entrySet()) {
+		for (Map.Entry<Integer, Double> neighbour : userSimilarities.get(userID).entrySet()) {
 			if (data.getUserItemRatings().get(neighbour.getKey()).get(itemID) != null) {
 				similaritiesList.add(neighbour.getValue());
-				ratingsList.add(data.getUserItemRatings()
-						.get(neighbour.getKey()).get(itemID));
-				averageList.add(data.getAverageUserRatings().get(
-						neighbour.getKey()));
+				ratingsList.add(data.getUserItemRatings().get(neighbour.getKey()).get(itemID));
+				averageList.add(data.getAverageUserRatings().get(neighbour.getKey()));
 				if (pMetric.equals("centrality0")) {
-					centralitiesList.add(data.getCentralityScores(0).get(
-							neighbour.getKey()));
+					centralitiesList.add(data.getCentralityScores(0).get(neighbour.getKey()));
 				} else if (pMetric.equals("centrality1")) {
-					centralitiesList.add(data.getCentralityScores(1).get(
-							neighbour.getKey()));
+					centralitiesList.add(data.getCentralityScores(1).get(neighbour.getKey()));
 				} else if (pMetric.equals("centrality2")) {
-					centralitiesList.add(data.getCentralityScores(2).get(
-							neighbour.getKey()));
+					centralitiesList.add(data.getCentralityScores(2).get(neighbour.getKey()));
 				}
 			}
 		}
 
+		Recommender.addSimilarityListSize(similaritiesList.size());
+
+		// System.out.println("User " + userID + " similarityListSize: " +
+		// similaritiesList.size());
+
 		if (pMetric.equals("weighted")) {
-			prediction = Prediction.calculateWeightedSum(similaritiesList,
-					ratingsList);
+			prediction = Prediction.calculateWeightedSum(similaritiesList, ratingsList);
 		} else if (pMetric.equals("adjusted")) {
-			prediction = Prediction.calculateAdjustedSum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList);
+			prediction = Prediction.calculateAdjustedSum(data.getAverageUserRatings().get(userID),
+					averageList, ratingsList);
 		} else if (pMetric.equals("adjweighted")) {
-			prediction = Prediction.calculateAdjustedWeightedSum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList, similaritiesList);
+			prediction = Prediction.calculateAdjustedWeightedSum(
+					data.getAverageUserRatings().get(userID), averageList, ratingsList,
+					similaritiesList);
 		} else if (pMetric.startsWith("centrality")) {
-			prediction = Prediction.calculateCentralitySum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList, similaritiesList, centralitiesList);
+			prediction = Prediction.calculateCentralitySum(
+					data.getAverageUserRatings().get(userID), averageList, ratingsList,
+					similaritiesList, centralitiesList);
 		}
 
 		if (prediction == 0) {
+			Recommender.addAverageUser();
+			System.out.println("UserID=" + userID + ",itemID=" + itemID);
+			if (data.getUsersByItem().containsKey(itemID)) {
+				for (Integer item : data.getUsersByItem().get(itemID)) {
+					System.out.print(item + ",");
+				}
+				System.out.println();
+			} else {
+				System.out.println("Item " + itemID + " has not been rated.");
+			}
 			return data.getAverageUserRatings().get(userID);
 		}
 
@@ -266,12 +266,10 @@ public class UserBasedPredictor extends Predictor {
 		}
 
 		if (sMetric.equals("cosine")) {
-			sim = Similarity.calculateCosineSimilarity(ratingsUser1,
-					ratingsUser2);
+			sim = Similarity.calculateCosineSimilarity(ratingsUser1, ratingsUser2);
 		} else if (sMetric.equals("pearson")) {
-			sim = Similarity.calculatePearsonCorrelation(ratingsUser1,
-					ratingsUser2, data.getAverageUserRatings().get(user1), data
-							.getAverageUserRatings().get(user2));
+			sim = Similarity.calculatePearsonCorrelation(ratingsUser1, ratingsUser2, data
+					.getAverageUserRatings().get(user1), data.getAverageUserRatings().get(user2));
 		}
 
 		return sim;

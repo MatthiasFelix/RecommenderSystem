@@ -20,8 +20,8 @@ public class SocialUserBasedPredictor extends Predictor {
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
-	public SocialUserBasedPredictor(String sMetric, String pMetric,
-			String socialNeighbourhood, Data d) {
+	public SocialUserBasedPredictor(String sMetric, String pMetric, String socialNeighbourhood,
+			Data d) {
 		this.data = d;
 		this.sMetric = sMetric;
 		this.pMetric = pMetric;
@@ -31,8 +31,8 @@ public class SocialUserBasedPredictor extends Predictor {
 
 	}
 
-	public SocialUserBasedPredictor(String sMetric, String pMetric,
-			String socialNeighbourhood, Double socialThreshold, Data d) {
+	public SocialUserBasedPredictor(String sMetric, String pMetric, String socialNeighbourhood,
+			Double socialThreshold, Data d) {
 		this.data = d;
 		this.sMetric = sMetric;
 		this.pMetric = pMetric;
@@ -96,13 +96,11 @@ public class SocialUserBasedPredictor extends Predictor {
 
 		// Calculate the average size of the similarity lists
 		int similaritiesCount = 0;
-		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities
-				.entrySet()) {
+		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities.entrySet()) {
 			similaritiesCount += entry.getValue().size();
 		}
-		Recommender
-				.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
-						/ (double) userSimilarities.size());
+		Recommender.setAverageSizeOfSimilarityListUsers((double) similaritiesCount
+				/ (double) userSimilarities.size());
 
 	}
 
@@ -125,46 +123,49 @@ public class SocialUserBasedPredictor extends Predictor {
 			return prediction;
 		}
 
-		for (Map.Entry<Integer, Double> friend : userSimilarities.get(userID)
-				.entrySet()) {
+		for (Map.Entry<Integer, Double> friend : userSimilarities.get(userID).entrySet()) {
 			if (data.getUserItemRatings().get(friend.getKey()).get(itemID) != null) {
 				similaritiesList.add(friend.getValue());
-				ratingsList.add(data.getUserItemRatings().get(friend.getKey())
-						.get(itemID));
-				averageList.add(data.getAverageUserRatings().get(
-						friend.getKey()));
+				ratingsList.add(data.getUserItemRatings().get(friend.getKey()).get(itemID));
+				averageList.add(data.getAverageUserRatings().get(friend.getKey()));
 				if (pMetric.equals("centrality0")) {
-					centralitiesList.add(data.getCentralityScores(0).get(
-							friend.getKey()));
+					centralitiesList.add(data.getCentralityScores(0).get(friend.getKey()));
 				} else if (pMetric.equals("centrality1")) {
-					centralitiesList.add(data.getCentralityScores(1).get(
-							friend.getKey()));
+					centralitiesList.add(data.getCentralityScores(1).get(friend.getKey()));
 				} else if (pMetric.equals("centrality2")) {
-					centralitiesList.add(data.getCentralityScores(2).get(
-							friend.getKey()));
+					centralitiesList.add(data.getCentralityScores(2).get(friend.getKey()));
 				}
 			}
 		}
 
+		Recommender.addSimilarityListSize(similaritiesList.size());
+
 		if (pMetric.equals("weighted")) {
-			prediction = Prediction.calculateWeightedSum(similaritiesList,
-					ratingsList);
+			prediction = Prediction.calculateWeightedSum(similaritiesList, ratingsList);
 		} else if (pMetric.equals("adjusted")) {
-			prediction = Prediction.calculateAdjustedSum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList);
+			prediction = Prediction.calculateAdjustedSum(data.getAverageUserRatings().get(userID),
+					averageList, ratingsList);
 		} else if (pMetric.equals("adjweighted")) {
-			prediction = Prediction.calculateAdjustedWeightedSum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList, similaritiesList);
+			prediction = Prediction.calculateAdjustedWeightedSum(
+					data.getAverageUserRatings().get(userID), averageList, ratingsList,
+					similaritiesList);
 		} else if (pMetric.startsWith("centrality")) {
-			prediction = Prediction.calculateCentralitySum(data
-					.getAverageUserRatings().get(userID), averageList,
-					ratingsList, similaritiesList, centralitiesList);
+			prediction = Prediction.calculateCentralitySum(
+					data.getAverageUserRatings().get(userID), averageList, ratingsList,
+					similaritiesList, centralitiesList);
 		}
 
 		if (prediction == 0) {
-			// System.out.println("Returning average");
+			Recommender.addAverageUser();
+			// System.out.println("UserID=" + userID + ",itemID=" + itemID);
+			// if (data.getUsersByItem().containsKey(itemID)) {
+			// for (Integer item : data.getUsersByItem().get(itemID)) {
+			// System.out.print(item + ",");
+			// }
+			// System.out.println();
+			// } else {
+			// System.out.println("Item " + itemID + " has not been rated.");
+			// }
 			return data.getAverageUserRatings().get(userID);
 		}
 
@@ -199,8 +200,7 @@ public class SocialUserBasedPredictor extends Predictor {
 			// Only go further if distance is smaller than maximal distance k
 			if (distance.get(currentNode) < k) {
 				for (Integer friend : data.getUserFriends().get(currentNode)) {
-					if (!queue.contains(friend) && visited.get(friend) == false
-							&& friend != userID) {
+					if (!queue.contains(friend) && visited.get(friend) == false && friend != userID) {
 						queue.offer(friend);
 						distance.put(friend, distance.get(currentNode) + 1);
 					}
@@ -228,11 +228,9 @@ public class SocialUserBasedPredictor extends Predictor {
 			// Recursively call method to traverse the friend graph until k-th
 			// level
 			for (Integer friend : data.getUserFriends().get(userID)) {
-				ArrayList<Integer> furtherFriends = getFriendsKthLevelRecursive(
-						friend, k - 1);
+				ArrayList<Integer> furtherFriends = getFriendsKthLevelRecursive(friend, k - 1);
 				for (Integer furtherFriend : furtherFriends) {
-					if (!friends.contains(furtherFriend)
-							&& furtherFriend != userID) {
+					if (!friends.contains(furtherFriend) && furtherFriend != userID) {
 						friends.add(furtherFriend);
 					}
 				}
@@ -258,8 +256,7 @@ public class SocialUserBasedPredictor extends Predictor {
 		double sim = 0;
 
 		// HACK!
-		if (data.getItemsByUser().get(user1) == null
-				|| data.getItemsByUser().get(user2) == null) {
+		if (data.getItemsByUser().get(user1) == null || data.getItemsByUser().get(user2) == null) {
 			return sim;
 		}
 
@@ -286,12 +283,10 @@ public class SocialUserBasedPredictor extends Predictor {
 		}
 
 		if (sMetric.equals("cosine")) {
-			sim = Similarity.calculateCosineSimilarity(ratingsUser1,
-					ratingsUser2);
+			sim = Similarity.calculateCosineSimilarity(ratingsUser1, ratingsUser2);
 		} else if (sMetric.equals("pearson")) {
-			sim = Similarity.calculatePearsonCorrelation(ratingsUser1,
-					ratingsUser2, data.getAverageUserRatings().get(user1), data
-							.getAverageUserRatings().get(user2));
+			sim = Similarity.calculatePearsonCorrelation(ratingsUser1, ratingsUser2, data
+					.getAverageUserRatings().get(user1), data.getAverageUserRatings().get(user2));
 		}
 
 		return sim;
