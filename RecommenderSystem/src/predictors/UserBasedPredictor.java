@@ -30,6 +30,13 @@ public class UserBasedPredictor extends Predictor {
 	// needed to sort the neighbour lists by similarity
 	private Comparator<Map.Entry<Integer, Double>> comparator;
 
+	private double averageSizeOfItemSet1 = 0.0;
+	private double averageSizeOfItemSet095 = 0.0;
+	private double averageSizeOfItemSet09 = 0.0;
+	private int sim1Counter = 0;
+	private int sim095Counter = 0;
+	private int sim09Counter = 0;
+
 	// Depending on which constructor is used, the algorithm runs with either a
 	// neighbourhood size or a threshold
 	public UserBasedPredictor(int neighbourhoodSize, String sMetric, String pMetric, Data d) {
@@ -115,6 +122,14 @@ public class UserBasedPredictor extends Predictor {
 			}
 		}
 
+		averageSizeOfItemSet1 /= sim1Counter;
+		averageSizeOfItemSet095 /= sim095Counter;
+		averageSizeOfItemSet09 /= sim09Counter;
+
+		System.out.println("Average for 1.0 similarity itemSet: " + averageSizeOfItemSet1);
+		System.out.println("Average for 0.95 similarity itemSet: " + averageSizeOfItemSet095);
+		System.out.println("Average for 0.9 similarity itemSet: " + averageSizeOfItemSet09);
+
 		if (neighbourhood.equals("size")) {
 			// sort the maps by decreasing similarity and take the N most
 			// similar
@@ -134,6 +149,7 @@ public class UserBasedPredictor extends Predictor {
 						break;
 					m.put(e.getKey(), e.getValue());
 					count++;
+
 				}
 				// replace current map with the map with most similar users
 				userSimilarities.put(entry.getKey(), m);
@@ -173,6 +189,7 @@ public class UserBasedPredictor extends Predictor {
 
 		// If there are no similarities stored, return the user's average
 		if (userSimilarities.get(userID) == null) {
+			Recommender.addAverageUser();
 			return prediction;
 		}
 
@@ -200,6 +217,7 @@ public class UserBasedPredictor extends Predictor {
 
 		// System.out.println("User " + userID + " similarityListSize: " +
 		// similaritiesList.size());
+		// System.out.println("User " + userID + ":");
 
 		if (pMetric.equals("weighted")) {
 			prediction = Prediction.calculateWeightedSum(similaritiesList, ratingsList);
@@ -218,15 +236,6 @@ public class UserBasedPredictor extends Predictor {
 
 		if (prediction == 0) {
 			Recommender.addAverageUser();
-			System.out.println("UserID=" + userID + ",itemID=" + itemID);
-			if (data.getUsersByItem().containsKey(itemID)) {
-				for (Integer item : data.getUsersByItem().get(itemID)) {
-					System.out.print(item + ",");
-				}
-				System.out.println();
-			} else {
-				System.out.println("Item " + itemID + " has not been rated.");
-			}
 			return data.getAverageUserRatings().get(userID);
 		}
 
@@ -270,6 +279,19 @@ public class UserBasedPredictor extends Predictor {
 		} else if (sMetric.equals("pearson")) {
 			sim = Similarity.calculatePearsonCorrelation(ratingsUser1, ratingsUser2, data
 					.getAverageUserRatings().get(user1), data.getAverageUserRatings().get(user2));
+		}
+
+		if (sim == 1.0) {
+			averageSizeOfItemSet1 += ratingsUser1.length;
+			sim1Counter++;
+		} else if (sim > 0.95) {
+			averageSizeOfItemSet095 += ratingsUser1.length;
+			sim095Counter++;
+		}
+
+		if (sim < 1.0 && sim >= 0.9) {
+			averageSizeOfItemSet09 += ratingsUser1.length;
+			sim09Counter++;
 		}
 
 		return sim;

@@ -65,11 +65,11 @@ public class RatingGenerator {
 	private static final int MIN = 1;
 	private static final int MAX = 5;
 	private static String friendsFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/friendsA01.txt";
-	private static String ratingFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/ratingsA02.txt";
-	private static double a = 0.5;
-	private static double b = 0.3;
-	private static double p = 0.5;
-	private static int numberOfCommunityItems = 50;
+	private static String ratingFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/artificial/RATINGS_290714_1.txt";
+	private static double a = 1. / 3.;
+	private static double b = 0.0;
+	private static double p = 1. / 3.;
+	private static int numberOfCommunityItems = 100;
 
 	private static Random random;
 	private static GaussianGenerator gg;
@@ -131,9 +131,11 @@ public class RatingGenerator {
 		initializeCommunityItems();
 
 		// Initialize user listening counts (following a Gaussian distribution)
+
 		int c = 0;
 		for (Integer userID : userList) {
-			userListeningCounts.put(userID, (int) (nextGaussianValue() * 60));
+			userListeningCounts.put(userID, (int) (nextGaussianValue() * 200));
+			System.out.println(userListeningCounts.get(userID));
 			c += userListeningCounts.get(userID);
 		}
 		System.out.println("number of listeningcounts: " + c);
@@ -460,7 +462,8 @@ public class RatingGenerator {
 		do {
 			value = gg.nextValue();
 		} while (value < 0 || value > 1);
-		return value * (MAX - MIN) + MIN;
+		// return value * (MAX - MIN) + MIN;
+		return value;
 	}
 
 	public static double nextExponentialValue() {

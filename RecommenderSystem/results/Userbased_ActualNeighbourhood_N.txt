@@ -1,0 +1,334 @@
+================================================================================
+Training set: user_artists_n.data__1_1.base
+Test set: user_artists_n.data__1_1.test
+================================================================================
+----------------------------------
+Neighbourhood Size: 1
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.028346456692913385
+Users where average is used: 16042
+userbased 		 cosine 		 adjweighted 		 0.80282 	 6.748
+
+----------------------------------
+Neighbourhood Size: 2
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.054633555420957
+Users where average is used: 15667
+userbased 		 cosine 		 adjweighted 		 0.81324 	 7.046
+
+----------------------------------
+Neighbourhood Size: 5
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.13458509993943066
+Users where average is used: 14670
+userbased 		 cosine 		 adjweighted 		 0.83490 	 6.918
+
+----------------------------------
+Neighbourhood Size: 10
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.2682616596002423
+Users where average is used: 13440
+userbased 		 cosine 		 adjweighted 		 0.85396 	 6.277
+
+----------------------------------
+Neighbourhood Size: 15
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.4113870381586917
+Users where average is used: 12498
+userbased 		 cosine 		 adjweighted 		 0.86800 	 6.281
+
+----------------------------------
+Neighbourhood Size: 20
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.552755905511811
+Users where average is used: 11775
+userbased 		 cosine 		 adjweighted 		 0.87130 	 7.011
+
+----------------------------------
+Neighbourhood Size: 30
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 0.817504542701393
+Users where average is used: 10670
+userbased 		 cosine 		 adjweighted 		 0.88115 	 6.708
+
+----------------------------------
+Neighbourhood Size: 40
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 1.0892792247122955
+Users where average is used: 9887
+userbased 		 cosine 		 adjweighted 		 0.87856 	 6.296
+
+----------------------------------
+Neighbourhood Size: 50
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 1.3524530587522714
+Users where average is used: 9263
+userbased 		 cosine 		 adjweighted 		 0.87640 	 6.197
+
+----------------------------------
+Neighbourhood Size: 60
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 1.6065414900060568
+Users where average is used: 8797
+userbased 		 cosine 		 adjweighted 		 0.87552 	 6.316
+
+----------------------------------
+Neighbourhood Size: 70
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 1.8732889158086008
+Users where average is used: 8398
+userbased 		 cosine 		 adjweighted 		 0.87288 	 6.506
+
+----------------------------------
+Neighbourhood Size: 100
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 2.6754088431253784
+Users where average is used: 7457
+userbased 		 cosine 		 adjweighted 		 0.86622 	 6.490
+
+----------------------------------
+Neighbourhood Size: 120
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 3.2113264688067837
+Users where average is used: 6997
+userbased 		 cosine 		 adjweighted 		 0.86639 	 6.369
+
+----------------------------------
+Neighbourhood Size: 150
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 4.031011508176863
+Users where average is used: 6464
+userbased 		 cosine 		 adjweighted 		 0.85857 	 6.478
+
+----------------------------------
+Neighbourhood Size: 175
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 4.7109630526953366
+Users where average is used: 6083
+userbased 		 cosine 		 adjweighted 		 0.85787 	 6.502
+
+----------------------------------
+Neighbourhood Size: 200
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 5.397456087219867
+Users where average is used: 5777
+userbased 		 cosine 		 adjweighted 		 0.85314 	 6.662
+
+----------------------------------
+Neighbourhood Size: 225
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 6.123985463355542
+Users where average is used: 5503
+userbased 		 cosine 		 adjweighted 		 0.84950 	 6.523
+
+----------------------------------
+Neighbourhood Size: 250
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 6.911932162325863
+Users where average is used: 5222
+userbased 		 cosine 		 adjweighted 		 0.84739 	 6.672
+
+----------------------------------
+Neighbourhood Size: 300
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 8.714900060569352
+Users where average is used: 4727
+userbased 		 cosine 		 adjweighted 		 0.84150 	 6.924
+
+----------------------------------
+Neighbourhood Size: 350
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 10.849485160508783
+Users where average is used: 4327
+userbased 		 cosine 		 adjweighted 		 0.83493 	 7.236
+
+----------------------------------
+Neighbourhood Size: 400
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 13.33840096910963
+Users where average is used: 3971
+userbased 		 cosine 		 adjweighted 		 0.83055 	 7.401
+
+----------------------------------
+Neighbourhood Size: 450
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 16.116535433070865
+Users where average is used: 3665
+userbased 		 cosine 		 adjweighted 		 0.82368 	 7.356
+
+----------------------------------
+Neighbourhood Size: 500
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 19.154451847365234
+Users where average is used: 3456
+userbased 		 cosine 		 adjweighted 		 0.81936 	 7.617
+
+----------------------------------
+Neighbourhood Size: 600
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 25.58479709267111
+Users where average is used: 3123
+userbased 		 cosine 		 adjweighted 		 0.81087 	 8.172
+
+----------------------------------
+Neighbourhood Size: 700
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 32.29024833434282
+Users where average is used: 2914
+userbased 		 cosine 		 adjweighted 		 0.80439 	 8.480
+
+----------------------------------
+Neighbourhood Size: 800
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 38.87946698970321
+Users where average is used: 2794
+userbased 		 cosine 		 adjweighted 		 0.80031 	 8.552
+
+----------------------------------
+Neighbourhood Size: 900
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 44.614900060569354
+Users where average is used: 2702
+userbased 		 cosine 		 adjweighted 		 0.79861 	 9.048
+
+----------------------------------
+Neighbourhood Size: 1000
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 48.976317383403995
+Users where average is used: 2653
+userbased 		 cosine 		 adjweighted 		 0.79813 	 9.384
+
+----------------------------------
+Neighbourhood Size: 1100
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 51.991883706844334
+Users where average is used: 2626
+userbased 		 cosine 		 adjweighted 		 0.79716 	 9.491
+
+----------------------------------
+Neighbourhood Size: 1200
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 54.10211992731678
+Users where average is used: 2612
+userbased 		 cosine 		 adjweighted 		 0.79691 	 9.915
+
+----------------------------------
+Neighbourhood Size: 1300
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 55.73313143549364
+Users where average is used: 2611
+userbased 		 cosine 		 adjweighted 		 0.79679 	 9.923
+
+----------------------------------
+Neighbourhood Size: 1400
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 57.01804966686856
+Users where average is used: 2609
+userbased 		 cosine 		 adjweighted 		 0.79674 	 10.407
+
+----------------------------------
+Neighbourhood Size: 1500
+----------------------------------
+Predictor 		 Similarity metric 	 Prediction metric 	 RMSE 		 Run Time (s)
+
+Number of predictions N: 16510
+Average sim size: 58.15741974560872
+Users where average is used: 2609
+userbased 		 cosine 		 adjweighted 		 0.79674 	 10.876
+

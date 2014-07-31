@@ -37,9 +37,14 @@ public class CentralityTester {
 
 	private static Data data;
 
-	private static int influencerSize = 7;
+	private static int[] influencerSizes = new int[100];
+
+	private static double[][] results = new double[influencerSizes.length][3];
 
 	public static void main(String[] args) {
+
+		for (int i = 0; i < 100; i++)
+			influencerSizes[i] = i + 1;
 
 		userCentrality = new HashMap<Integer, Double>();
 		userCommunity = new TreeMap<Integer, Integer>();
@@ -97,6 +102,28 @@ public class CentralityTester {
 		System.out.println("\n\n SIZES: " + sortedErrorDifferences.size() + "   "
 				+ sortedUserCentralities.size() + "\n\n");
 
+		double[][] ratings = Recommender.readData(userRatings);
+		int[][] friends = Recommender.readFriendsList(userFriends);
+
+		data = new Data(ratings, friends, userFriends, userRatings);
+
+		calculateSimilarities();
+
+		// Make the test runs
+		for (int i : influencerSizes) {
+			System.out.println("i=" + i);
+			runInfluencerTest(sortedUserCentralities, i);
+		}
+		System.out.println("Inf\tCom\tNet");
+		for (double[] res : results) {
+			System.out.println(res[0] + "\t" + res[1] + "\t" + res[2]);
+		}
+
+	}
+
+	public static void runInfluencerTest(
+			ArrayList<Map.Entry<Integer, Double>> sortedUserCentralities, int influencerSize) {
+
 		for (Map.Entry<Integer, HashSet<Integer>> entry : communityUsers.entrySet()) {
 			HashSet<Integer> hs = new HashSet<Integer>();
 			communityInfluencers.put(entry.getKey(), hs);
@@ -108,84 +135,92 @@ public class CentralityTester {
 			}
 		}
 
-		for (Map.Entry<Integer, HashSet<Integer>> entry : communityInfluencers.entrySet()) {
-			System.out.print("Comm: " + entry.getKey() + ", influencers: ");
-			for (Integer inf : entry.getValue()) {
-				System.out.print(inf + ", ");
-			}
-			System.out.println();
-		}
-
-		double[][] ratings = Recommender.readData(userRatings);
-		int[][] friends = Recommender.readFriendsList(userFriends);
-
-		data = new Data(ratings, friends, userFriends, userRatings);
-
-		calculateSimilarities();
-
 		// First entry in the ArrayList is correlation with influencer, second
-		// entry is correlation with rest of community
+		// entry is correlation with rest of community, third entry is
+		// correlation with rest of network
 		HashMap<Integer, ArrayList<Double>> correlations = new HashMap<Integer, ArrayList<Double>>();
 
 		for (int user : userCommunity.keySet()) {
 			if (!communityInfluencers.get(userCommunity.get(user)).contains(user)) {
 				ArrayList<Double> corrs = new ArrayList<Double>();
 
+				int counter = 0;
 				double influencerCorr = 0.0;
 				for (int infMember : communityInfluencers.get(userCommunity.get(user))) {
 					influencerCorr += userSimilarities.get(user).get(infMember);
+					counter++;
 				}
-				influencerCorr /= communityInfluencers.get(userCommunity.get(user)).size();
+				influencerCorr /= counter;
 				corrs.add(influencerCorr);
 
+				counter = 0;
 				double restOfCommunity = 0.0;
 				for (int comMember : communityUsers.get(userCommunity.get(user))) {
-					if (comMember != user)
+					if (comMember != user
+							&& !communityInfluencers.get(userCommunity.get(user)).contains(
+									comMember)) {
 						restOfCommunity += userSimilarities.get(user).get(comMember);
-				}
-				restOfCommunity /= (communityUsers.get(userCommunity.get(user)).size() - 2);
-				corrs.add(restOfCommunity);
-
-				double restOfNetwork = 0.0;
-				for (Integer networkMember : userCommunity.keySet()) {
-					if (networkMember != user) {
-						restOfNetwork += userSimilarities.get(user).get(networkMember);
+						counter++;
 					}
 				}
-				restOfNetwork /= (userCommunity.keySet().size() - 2);
+				restOfCommunity /= counter;
+				corrs.add(restOfCommunity);
+
+				counter = 0;
+				double restOfNetwork = 0.0;
+				for (Integer networkMember : userCommunity.keySet()) {
+					if (networkMember != user
+							&& !communityUsers.get(userCommunity.get(user)).contains(networkMember)) {
+						restOfNetwork += userSimilarities.get(user).get(networkMember);
+						counter++;
+					}
+				}
+				restOfNetwork /= counter;
 				corrs.add(restOfNetwork);
 				correlations.put(user, corrs);
 			}
 		}
 
+		double influencerAverage = 0.0;
+		double communityAverage = 0.0;
+		double networkAverage = 0.0;
+
 		double influencerCommunityDifference = 0.0;
 		double influencerNetworkDifference = 0.0;
 		double communityNetworkDifference = 0.0;
+		int counter = 0;
 
-		DecimalFormat df = new DecimalFormat("#.##");
+		DecimalFormat df = new DecimalFormat("#.####");
 
 		for (Map.Entry<Integer, ArrayList<Double>> entry : correlations.entrySet()) {
-			System.out.println("User " + entry.getKey() + ":\tCorr with Influencer = "
-					+ df.format(entry.getValue().get(0)) + ", Corr with rest of community = "
-					+ df.format(entry.getValue().get(1)) + ", Corr with rest of network = "
-					+ df.format(entry.getValue().get(2)));
 			if (Double.isNaN(entry.getValue().get(1))) {
 				// Community only consists of that user and the influencer
 				continue;
 			}
+			influencerAverage += entry.getValue().get(0);
+			communityAverage += entry.getValue().get(1);
+			networkAverage += entry.getValue().get(2);
+
 			influencerCommunityDifference += (entry.getValue().get(0) - entry.getValue().get(1));
 			influencerNetworkDifference += (entry.getValue().get(0) - entry.getValue().get(2));
 			communityNetworkDifference += (entry.getValue().get(1) - entry.getValue().get(2));
+
+			counter++;
 		}
 
-		System.out.println("influencer-community: " + df.format(influencerCommunityDifference));
-		System.out.println("influencer-network: " + df.format(influencerNetworkDifference));
-		System.out.println("community-network: " + df.format(communityNetworkDifference));
+		System.out.println("influencerAverage: " + df.format(influencerAverage / counter));
+		System.out.println("communityAverage: " + df.format(communityAverage / counter));
+		System.out.println("networkAverage: " + df.format(networkAverage / counter));
 
-		for (Map.Entry<Integer, Double> entry : sortedErrorDifferences) {
-			System.out.println("Com " + userCommunity.get(entry.getKey()));
-		}
+		results[influencerSize - 1][0] = influencerAverage / counter;
+		results[influencerSize - 1][1] = communityAverage / counter;
+		results[influencerSize - 1][2] = networkAverage / counter;
 
+		System.out.println("influencer-community: "
+				+ df.format(influencerCommunityDifference / counter));
+		System.out.println("influencer-network: "
+				+ df.format(influencerNetworkDifference / counter));
+		System.out.println("community-network: " + df.format(communityNetworkDifference / counter));
 	}
 
 	private static void readUserErrorDifferences(String fileName) {

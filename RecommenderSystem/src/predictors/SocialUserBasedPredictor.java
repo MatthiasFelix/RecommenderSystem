@@ -20,6 +20,13 @@ public class SocialUserBasedPredictor extends Predictor {
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
+	private double averageSizeOfItemSet1 = 0.0;
+	private double averageSizeOfItemSet095 = 0.0;
+	private double averageSizeOfItemSet09 = 0.0;
+	private int sim1Counter = 0;
+	private int sim095Counter = 0;
+	private int sim09Counter = 0;
+
 	public SocialUserBasedPredictor(String sMetric, String pMetric, String socialNeighbourhood,
 			Data d) {
 		this.data = d;
@@ -64,7 +71,6 @@ public class SocialUserBasedPredictor extends Predictor {
 				if (user1 < user2) {
 
 					sim = computeSimilarity(user1, user2);
-					// System.out.println("Sim: " + sim);
 
 					if (socialThreshold != null) {
 						if (sim < socialThreshold) {
@@ -94,6 +100,14 @@ public class SocialUserBasedPredictor extends Predictor {
 			}
 		}
 
+		averageSizeOfItemSet1 /= sim1Counter;
+		averageSizeOfItemSet095 /= sim095Counter;
+		averageSizeOfItemSet09 /= sim09Counter;
+
+		System.out.println("Average for 1.0 similarity itemSet: " + averageSizeOfItemSet1);
+		System.out.println("Average for 0.95 similarity itemSet: " + averageSizeOfItemSet095);
+		System.out.println("Average for 0.9 similarity itemSet: " + averageSizeOfItemSet09);
+
 		// Calculate the average size of the similarity lists
 		int similaritiesCount = 0;
 		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities.entrySet()) {
@@ -120,6 +134,7 @@ public class SocialUserBasedPredictor extends Predictor {
 		ArrayList<Double> centralitiesList = new ArrayList<Double>();
 
 		if (userSimilarities.get(userID) == null) {
+			Recommender.addAverageUser();
 			return prediction;
 		}
 
@@ -180,6 +195,7 @@ public class SocialUserBasedPredictor extends Predictor {
 		// Initialize HashMap that stores a boolean (true if node is visited in
 		// BFS, false otherwise). In the beginning, no nodes are visited yet.
 		HashMap<Integer, Boolean> visited = new HashMap<Integer, Boolean>();
+
 		for (Integer user : data.getUserItemRatings().keySet()) {
 			visited.put(user, false);
 		}
@@ -287,6 +303,19 @@ public class SocialUserBasedPredictor extends Predictor {
 		} else if (sMetric.equals("pearson")) {
 			sim = Similarity.calculatePearsonCorrelation(ratingsUser1, ratingsUser2, data
 					.getAverageUserRatings().get(user1), data.getAverageUserRatings().get(user2));
+		}
+
+		if (sim == 1.0) {
+			averageSizeOfItemSet1 += ratingsUser1.length;
+			sim1Counter++;
+		} else if (sim > 0.95) {
+			averageSizeOfItemSet095 += ratingsUser1.length;
+			sim095Counter++;
+		}
+
+		if (sim < 1.0 && sim >= 0.9) {
+			averageSizeOfItemSet09 += ratingsUser1.length;
+			sim09Counter++;
 		}
 
 		return sim;

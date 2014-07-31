@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import predictors.AverageBasedPredictor;
 import predictors.ItemBasedPredictor;
@@ -26,7 +27,7 @@ public class Recommender {
 
 	private static String parameterFile = "src/parameters.txt";
 
-	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_USERBASED_N_250714.txt";
+	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_AVERAGE_270714.txt";
 
 	private static final boolean DEBUG = true;
 
