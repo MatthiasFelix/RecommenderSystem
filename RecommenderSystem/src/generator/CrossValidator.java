@@ -12,12 +12,11 @@ import java.util.TreeMap;
 import rec.Recommender;
 
 /**
+ * This class can be used to split a data set into multiple training and test
+ * data sets using k-fold cross-validation
  * 
  * @author matthiasfelix
- * 
- *         This class can be used to split a data set into multiple training and
- *         test data sets
- * 
+ *
  */
 public class CrossValidator {
 

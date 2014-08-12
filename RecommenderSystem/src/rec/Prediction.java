@@ -2,6 +2,12 @@ package rec;
 
 import java.util.ArrayList;
 
+/**
+ * This is the class that implements the different prediction metrics.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class Prediction {
 
 	public static double calculateWeightedSum(ArrayList<Double> similarities,

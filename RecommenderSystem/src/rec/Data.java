@@ -6,6 +6,13 @@ import java.util.TreeMap;
 
 import cwrapper.CWrapper;
 
+/**
+ * This class stores all the data that is read in from the data files in useful
+ * hash maps for quick look-up
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class Data {
 
 	double[][] data = null;
@@ -39,8 +46,7 @@ public class Data {
 
 	// Data can be initialized either with or without social network data
 	// (friend relations)
-	public Data(double[][] inputData, int[][] inputFriends, String friendsFile,
-			String ratingsFile) {
+	public Data(double[][] inputData, int[][] inputFriends, String friendsFile, String ratingsFile) {
 		friends = inputFriends;
 		data = inputData;
 		this.friendsFile = friendsFile;
@@ -56,8 +62,7 @@ public class Data {
 		userItemRatings = new TreeMap<Integer, HashMap<Integer, Double>>();
 		for (int i = 0; i < data.length; i++) {
 			if (userItemRatings.containsKey((int) data[i][0])) {
-				userItemRatings.get((int) data[i][0]).put((int) data[i][1],
-						data[i][2]);
+				userItemRatings.get((int) data[i][0]).put((int) data[i][1], data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
 				ratings.put((int) data[i][1], data[i][2]);
@@ -147,8 +152,7 @@ public class Data {
 		currentCentralityMode = centralityMode;
 
 		CWrapper cwrapper = CWrapper.getInstance();
-		double cent[] = cwrapper.getNormalizedCentrality(friendsFile,
-				centralityMode);
+		double cent[] = cwrapper.getNormalizedCentrality(friendsFile, centralityMode);
 
 		System.out.println("last key: " + userItemRatings.lastKey());
 		for (int i = 0; i <= userItemRatings.lastKey(); i++) {

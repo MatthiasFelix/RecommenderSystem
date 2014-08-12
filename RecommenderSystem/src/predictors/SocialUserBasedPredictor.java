@@ -11,6 +11,12 @@ import rec.Prediction;
 import rec.Recommender;
 import rec.Similarity;
 
+/**
+ * This class implements the social CF algorithm
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class SocialUserBasedPredictor extends Predictor {
 
 	private Data data;
@@ -19,13 +25,6 @@ public class SocialUserBasedPredictor extends Predictor {
 
 	// hash map: userID --> hash map: userID --> similarity
 	private HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
-
-	private double averageSizeOfItemSet1 = 0.0;
-	private double averageSizeOfItemSet095 = 0.0;
-	private double averageSizeOfItemSet09 = 0.0;
-	private int sim1Counter = 0;
-	private int sim095Counter = 0;
-	private int sim09Counter = 0;
 
 	public SocialUserBasedPredictor(String sMetric, String pMetric, String socialNeighbourhood,
 			Data d) {
@@ -100,14 +99,6 @@ public class SocialUserBasedPredictor extends Predictor {
 			}
 		}
 
-		averageSizeOfItemSet1 /= sim1Counter;
-		averageSizeOfItemSet095 /= sim095Counter;
-		averageSizeOfItemSet09 /= sim09Counter;
-
-		System.out.println("Average for 1.0 similarity itemSet: " + averageSizeOfItemSet1);
-		System.out.println("Average for 0.95 similarity itemSet: " + averageSizeOfItemSet095);
-		System.out.println("Average for 0.9 similarity itemSet: " + averageSizeOfItemSet09);
-
 		// Calculate the average size of the similarity lists
 		int similaritiesCount = 0;
 		for (Map.Entry<Integer, LinkedHashMap<Integer, Double>> entry : userSimilarities.entrySet()) {
@@ -172,15 +163,6 @@ public class SocialUserBasedPredictor extends Predictor {
 
 		if (prediction == 0) {
 			Recommender.addAverageUser();
-			// System.out.println("UserID=" + userID + ",itemID=" + itemID);
-			// if (data.getUsersByItem().containsKey(itemID)) {
-			// for (Integer item : data.getUsersByItem().get(itemID)) {
-			// System.out.print(item + ",");
-			// }
-			// System.out.println();
-			// } else {
-			// System.out.println("Item " + itemID + " has not been rated.");
-			// }
 			return data.getAverageUserRatings().get(userID);
 		}
 
@@ -281,7 +263,7 @@ public class SocialUserBasedPredictor extends Predictor {
 		for (Integer item : data.getItemsByUser().get(user1)) {
 			if (data.getItemsByUser().get(user2).contains(item)) {
 				sharedItems.add(item);
-				// System.out.println("Added item " + item);
+
 			}
 		}
 
@@ -293,8 +275,6 @@ public class SocialUserBasedPredictor extends Predictor {
 		for (Integer item : sharedItems) {
 			ratingsUser1[i] = data.getUserItemRatings().get(user1).get(item);
 			ratingsUser2[i] = data.getUserItemRatings().get(user2).get(item);
-			// System.out.println("rating1: " + ratingsUser1[i]);
-			// System.out.println("rating2: " + ratingsUser2[i]);
 			i++;
 		}
 
@@ -303,19 +283,6 @@ public class SocialUserBasedPredictor extends Predictor {
 		} else if (sMetric.equals("pearson")) {
 			sim = Similarity.calculatePearsonCorrelation(ratingsUser1, ratingsUser2, data
 					.getAverageUserRatings().get(user1), data.getAverageUserRatings().get(user2));
-		}
-
-		if (sim == 1.0) {
-			averageSizeOfItemSet1 += ratingsUser1.length;
-			sim1Counter++;
-		} else if (sim > 0.95) {
-			averageSizeOfItemSet095 += ratingsUser1.length;
-			sim095Counter++;
-		}
-
-		if (sim < 1.0 && sim >= 0.9) {
-			averageSizeOfItemSet09 += ratingsUser1.length;
-			sim09Counter++;
 		}
 
 		return sim;

@@ -6,6 +6,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+/**
+ * This class is used to store the results of the recommender simulation in a
+ * text file.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class ResultSaver {
 
 	private ArrayList<String> trainSets;
@@ -37,11 +44,10 @@ public class ResultSaver {
 		runTimes = new ArrayList<Double>();
 	}
 
-	public void putResult(String trainSet, String testSet,
-			String neighbourhood, Integer neighbourhoodSize, Double threshold,
-			String predictor, String similarityMetric, String predictionMetric,
-			String socialNeighbourhood, Double socialThreshold, Double RMSE,
-			Double runTime) {
+	public void putResult(String trainSet, String testSet, String neighbourhood,
+			Integer neighbourhoodSize, Double threshold, String predictor, String similarityMetric,
+			String predictionMetric, String socialNeighbourhood, Double socialThreshold,
+			Double RMSE, Double runTime) {
 		trainSets.add(trainSet);
 		testSets.add(testSet);
 		neighbourhoods.add(neighbourhood);
@@ -73,15 +79,12 @@ public class ResultSaver {
 			// All ArrayLists will be of the same size, since putResult puts one
 			// element into each ArrayList
 			for (int i = 0; i < trainSets.size(); i++) {
-				bufferedWriter.write(trainSets.get(i) + "\t" + testSets.get(i)
-						+ "\t" + neighbourhoods.get(i) + "\t"
-						+ neighbourhoodSizes.get(i) + "\t" + thresholds.get(i)
-						+ "\t" + predictors.get(i) + "\t"
-						+ similarityMetrics.get(i) + "\t"
-						+ predictionMetrics.get(i) + "\t"
-						+ socialNeighbourhoods.get(i) + "\t"
-						+ socialThresholds.get(i) + "\t" + RMSEs.get(i) + "\t"
-						+ runTimes.get(i) + "\n");
+				bufferedWriter.write(trainSets.get(i) + "\t" + testSets.get(i) + "\t"
+						+ neighbourhoods.get(i) + "\t" + neighbourhoodSizes.get(i) + "\t"
+						+ thresholds.get(i) + "\t" + predictors.get(i) + "\t"
+						+ similarityMetrics.get(i) + "\t" + predictionMetrics.get(i) + "\t"
+						+ socialNeighbourhoods.get(i) + "\t" + socialThresholds.get(i) + "\t"
+						+ RMSEs.get(i) + "\t" + runTimes.get(i) + "\n");
 			}
 
 			bufferedWriter.close();

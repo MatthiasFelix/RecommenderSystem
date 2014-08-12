@@ -15,6 +15,13 @@ import java.util.TreeMap;
 
 import rec.Recommender;
 
+/**
+ * This class is used to normalize the ratings and clean up the whole last.fm
+ * dataset, including the friends file.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class DataManipulator {
 
 	private static int[][] data;
@@ -28,11 +35,10 @@ public class DataManipulator {
 
 		cleanDataSet();
 
-		cleanUserFriends("lastfm-2k/user_friends.txt",
-				"lastfm-2k/user_friends_n.txt");
+		cleanUserFriends("lastfm-2k/user_friends.txt", "lastfm-2k/user_friends_n.txt");
 
-		// normalizeRatings(userItemRatings, 1, 5);
-		// writeNormalizedData("lastfm-2k/user_artists_n.data");
+		normalizeRatings(userItemRatings, 1, 5);
+		writeNormalizedData("lastfm-2k/user_artists_n.data");
 	}
 
 	public static int[][] readData(String fileName) {
@@ -58,8 +64,7 @@ public class DataManipulator {
 					try {
 						data[count][i] = new Integer(s[i]);
 					} catch (NumberFormatException nfe) {
-						System.err
-								.println("input data must be of type integer.");
+						System.err.println("input data must be of type integer.");
 						nfe.printStackTrace();
 					}
 
@@ -70,8 +75,7 @@ public class DataManipulator {
 
 		} catch (FileNotFoundException e) {
 			System.err
-					.println("Couldn't read the parameter file. Check the file name: "
-							+ fileName);
+					.println("Couldn't read the parameter file. Check the file name: " + fileName);
 			e.printStackTrace();
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
@@ -83,8 +87,7 @@ public class DataManipulator {
 	public static void initializeUserItemRatings(int[][] data) {
 		for (int i = 0; i < data.length; i++) {
 			if (userItemRatings.containsKey(data[i][0])) {
-				userItemRatings.get(data[i][0]).put(data[i][1],
-						(double) data[i][2]);
+				userItemRatings.get(data[i][0]).put(data[i][1], (double) data[i][2]);
 			} else {
 				HashMap<Integer, Double> ratings = new HashMap<Integer, Double>();
 				ratings.put(data[i][1], (double) data[i][2]);
@@ -112,32 +115,25 @@ public class DataManipulator {
 
 	}
 
-	public static void normalizeRatings(
-			TreeMap<Integer, HashMap<Integer, Double>> userItemRatings,
+	public static void normalizeRatings(TreeMap<Integer, HashMap<Integer, Double>> userItemRatings,
 			double minimum, double maximum) {
 
 		for (Integer userID : userItemRatings.keySet()) {
 
-			double currentMin = findMinimum(userItemRatings.get(userID)
-					.values());
-			double currentMax = findMaximum(userItemRatings.get(userID)
-					.values());
+			double currentMin = findMinimum(userItemRatings.get(userID).values());
+			double currentMax = findMaximum(userItemRatings.get(userID).values());
 
 			// Normalize the ratings and put them back into the userItemRatings
 			// hash map
-			for (Map.Entry<Integer, Double> entry : userItemRatings
-					.get(userID).entrySet()) {
+			for (Map.Entry<Integer, Double> entry : userItemRatings.get(userID).entrySet()) {
 				double newRating;
 				if (currentMin == currentMax) {
 					newRating = minimum + (double) (maximum - minimum) / 2.;
 				} else {
 					double normalizingFactor = (double) (entry.getValue() - currentMin)
 							/ (double) (currentMax - currentMin);
-					newRating = normalizingFactor * (maximum - minimum)
-							+ minimum;
+					newRating = normalizingFactor * (maximum - minimum) + minimum;
 				}
-				System.out.println("Replace " + entry.getValue() + " with "
-						+ newRating);
 				userItemRatings.get(userID).put(entry.getKey(), newRating);
 			}
 
@@ -147,9 +143,8 @@ public class DataManipulator {
 
 	public static void writeNormalizedData(String fileName) {
 
-		File file = new File(
-				"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
-						+ fileName);
+		File file = new File("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
+				+ fileName);
 		FileWriter fileWriter;
 
 		try {
@@ -158,8 +153,8 @@ public class DataManipulator {
 
 			for (Integer userID : userItemRatings.keySet()) {
 				for (Integer itemID : userItemRatings.get(userID).keySet()) {
-					b.write(userID + "\t" + itemID + "\t"
-							+ userItemRatings.get(userID).get(itemID) + "\n");
+					b.write(userID + "\t" + itemID + "\t" + userItemRatings.get(userID).get(itemID)
+							+ "\n");
 				}
 			}
 
@@ -191,14 +186,12 @@ public class DataManipulator {
 		return currentMin;
 	}
 
-	public static void cleanUserFriends(String oldFileDirection,
-			String newFileName) {
+	public static void cleanUserFriends(String oldFileDirection, String newFileName) {
 
 		int[][] friendsList = Recommender.readFriendsList(oldFileDirection);
 
-		File file = new File(
-				"/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
-						+ newFileName);
+		File file = new File("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/"
+				+ newFileName);
 		FileWriter fileWriter;
 
 		try {

@@ -2,6 +2,14 @@ package generator;
 
 import rec.Recommender;
 
+/**
+ * This class was used to run a large number of simulations (artificial data
+ * generation + recommender algorithms on the generated data), with a lot of
+ * different parameters.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class GeneratorRunner {
 
 	public static void main(String[] args) {
@@ -21,10 +29,12 @@ public class GeneratorRunner {
 			for (double a : as) {
 				for (double b : bs) {
 					for (double p : ps) {
-						RatingGenerator.main(new String[] { friendsFile,
-								ratingsFile + "Rating2_" + n + "_" + a + "_" + b + "_" + p + ".txt",
-								Integer.toString(n), Double.toString(a), Double.toString(b),
-								Double.toString(p) });
+						RatingGenerator
+								.main(new String[] {
+										friendsFile,
+										ratingsFile + "Rating2_" + n + "_" + a + "_" + b + "_" + p
+												+ ".txt", Integer.toString(n), Double.toString(a),
+										Double.toString(b), Double.toString(p) });
 						if (a + b <= 1) {
 							Recommender.main(new String[] { rootPath, parameterFile,
 									"Result2_" + n + "_" + a + "_" + b + "_" + p + ".txt",
@@ -32,6 +42,14 @@ public class GeneratorRunner {
 						}
 					}
 				}
+			}
+		}
+
+		for (int i = 1; i <= 3; i++) {
+			for (int j = 1; j <= 9; j += 2) {
+				Recommender.main(new String[] { rootPath, parameterFile,
+						"Result_040814_" + i + "_" + j + ".txt",
+						"RATINGS_040814_" + i + "_" + j + ".txt" });
 			}
 		}
 

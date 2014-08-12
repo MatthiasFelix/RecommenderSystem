@@ -38,8 +38,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 
 	int v = igraph_vcount(&graph);
 
-	printf("VCOUNT before merges: %i\n", v);
-
 	// Array with node attribute OC (Open Connections). This determines how many connections
 	// a node can make. The distribution of OC's over all nodes follows a power law.
 	int initialOpenConnections[v];
@@ -50,7 +48,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 	for (int i = 0; i < v; i++) {
 		initialOpenConnections[i] = gsl_ran_exponential(r, expFactor) * expMult;
 		VECTOR(mapping)[i] = i;
-		//printf("OC[%i]: %i\n", i, initialOpenConnections[i]);
 	}
 
 	long int node1, node2, chosenNode1, chosenNode2;
@@ -113,7 +110,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 				&res);
 
 		if (res == 1) {
-			//printf("continue\n");
 			continue;
 		}
 
@@ -168,8 +164,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 
 	}
 
-	printf("VCOUNT: %i\n", v);
-
 	// Calculate and print some measures of the resulting graph
 	igraph_real_t transitivity, averagePathLength;
 
@@ -179,9 +173,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 			IGRAPH_TRANSITIVITY_NAN);
 	igraph_average_path_length(&graph, &averagePathLength, IGRAPH_UNDIRECTED,
 			1);
-
-	printf("Transitivity: %f\nAverage path length: %f\n", (double) transitivity,
-			(double) averagePathLength);
 
 	// Write the edgelist to a file
 	FILE* file;
@@ -217,7 +208,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_generateGraph(
 			c++;
 		}
 	}
-	//printf("Nodes with no friends: %i\n", c);
 
 	fclose(file);
 
@@ -274,8 +264,6 @@ JNIEXPORT jdoubleArray JNICALL Java_cwrapper_CWrapper_getCentrality(
 
 	int v = igraph_vcount(&graph);
 	int resSize = igraph_vector_size(&res);
-
-	printf("v: %i, resSize: %i\n", v, resSize);
 
 	jdouble resArray[igraph_vector_size(&res)];
 

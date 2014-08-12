@@ -1,5 +1,12 @@
 package cwrapper;
 
+/**
+ * This class contains the native methods that call the C-code. It is
+ * implemented as a singleton, so the C-library is only loaded once.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class CWrapper {
 
 	private static CWrapper instance = new CWrapper();
@@ -21,8 +28,8 @@ public class CWrapper {
 
 	/**
 	 * This method calculates a centrality score for each node in the graph.
-	 * There are different measures: centralityMode = 0 --> degree
-	 * centralityMode = 1 --> closeness centrality centralityMode = 2 -->
+	 * There are different measures: centralityMode = 0 --> degree |
+	 * centralityMode = 1 --> closeness | centrality centralityMode = 2 -->
 	 * betweenness centrality
 	 * 
 	 * @param fileName

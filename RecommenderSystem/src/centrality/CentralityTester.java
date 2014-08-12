@@ -3,7 +3,6 @@ package centrality;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,30 +18,46 @@ import rec.Recommender;
 import rec.Similarity;
 import cwrapper.CWrapper;
 
+/**
+ * This class is used to test the correlation between users and community
+ * influencers
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class CentralityTester {
 
+	// hash map: userID --> communityID
 	private static TreeMap<Integer, Integer> userCommunity;
+	// hash map: userID --> centrality score
 	private static HashMap<Integer, Double> userCentrality;
+	// hash map: communityID --> set of users in this community
 	private static HashMap<Integer, HashSet<Integer>> communityUsers;
+	// hash map: communityID --> set of users that are influencers of this
+	// community
 	private static HashMap<Integer, HashSet<Integer>> communityInfluencers;
 
-	private static HashMap<Integer, Double> userErrorDifferences;
-
+	// hash map: userID --> hash map: userID --> similarity between those two
+	// users
 	private static HashMap<Integer, LinkedHashMap<Integer, Double>> userSimilarities;
 
+	// Paths of rating and network file
 	private static String userFriends = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/user_friends_n.txt";
 	private static String userRatings = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/lastfm-2k/user_artists_n.data";
 
+	// comparator that is used to sort the centrality hash map
 	private static Comparator<Map.Entry<Integer, Double>> comparator;
 
+	// This data structure is used for the similarity calculation
 	private static Data data;
 
 	private static int[] influencerSizes = new int[100];
-
+	// array that stores the resulting correlations
 	private static double[][] results = new double[influencerSizes.length][3];
 
 	public static void main(String[] args) {
 
+		// test every case from 1 to 100 influencers per community
 		for (int i = 0; i < 100; i++)
 			influencerSizes[i] = i + 1;
 
@@ -51,9 +66,10 @@ public class CentralityTester {
 		communityUsers = new HashMap<Integer, HashSet<Integer>>();
 		communityInfluencers = new HashMap<Integer, HashSet<Integer>>();
 
-		userErrorDifferences = new HashMap<Integer, Double>();
-
 		userSimilarities = new HashMap<Integer, LinkedHashMap<Integer, Double>>();
+
+		ArrayList<Map.Entry<Integer, Double>> sortedUserCentralities = new ArrayList<Map.Entry<Integer, Double>>(
+				userCentrality.entrySet());
 
 		comparator = new Comparator<Map.Entry<Integer, Double>>() {
 			public int compare(Entry<Integer, Double> o1, Entry<Integer, Double> o2) {
@@ -62,58 +78,23 @@ public class CentralityTester {
 
 		};
 
-		readUserErrorDifferences("/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/userErrors01.txt");
-
-		ArrayList<Map.Entry<Integer, Double>> sortedErrorDifferences = new ArrayList<Map.Entry<Integer, Double>>(
-				userErrorDifferences.entrySet());
-		Collections.sort(sortedErrorDifferences, comparator);
-
 		setUpCommunities();
 
-		for (Map.Entry<Integer, HashSet<Integer>> entry : communityUsers.entrySet()) {
-			System.out.print("Key: " + entry.getKey() + ", Size: " + entry.getValue().size()
-					+ "\t\t");
-			for (Integer u : entry.getValue()) {
-				System.out.print(u + ",");
-			}
-			System.out.println();
-		}
-
 		// Sort users by centrality (biggest centrality first in the list)
-		ArrayList<Map.Entry<Integer, Double>> sortedUserCentralities = new ArrayList<Map.Entry<Integer, Double>>(
-				userCentrality.entrySet());
 		Collections.sort(sortedUserCentralities, Collections.reverseOrder(comparator));
 
-		ArrayList<Integer> errorUsers = new ArrayList<Integer>();
-		for (Map.Entry<Integer, Double> entry : sortedErrorDifferences) {
-			errorUsers.add(entry.getKey());
-		}
-
-		ArrayList<Integer> centralityUsers = new ArrayList<Integer>();
-		for (Map.Entry<Integer, Double> entry : sortedUserCentralities) {
-			centralityUsers.add(entry.getKey());
-		}
-
-		for (Integer user : userCommunity.keySet()) {
-			System.out.println("Error: " + errorUsers.indexOf(user) + ", Centrality: "
-					+ centralityUsers.indexOf(user));
-		}
-
-		System.out.println("\n\n SIZES: " + sortedErrorDifferences.size() + "   "
-				+ sortedUserCentralities.size() + "\n\n");
-
+		// Initialize the data and calculate all user-similarities
 		double[][] ratings = Recommender.readData(userRatings);
 		int[][] friends = Recommender.readFriendsList(userFriends);
-
 		data = new Data(ratings, friends, userFriends, userRatings);
-
 		calculateSimilarities();
 
-		// Make the test runs
+		// Make the test runs for every number of influencer per community
 		for (int i : influencerSizes) {
-			System.out.println("i=" + i);
 			runInfluencerTest(sortedUserCentralities, i);
 		}
+
+		// Print out the results for further processing
 		System.out.println("Inf\tCom\tNet");
 		for (double[] res : results) {
 			System.out.println(res[0] + "\t" + res[1] + "\t" + res[2]);
@@ -123,6 +104,8 @@ public class CentralityTester {
 
 	public static void runInfluencerTest(
 			ArrayList<Map.Entry<Integer, Double>> sortedUserCentralities, int influencerSize) {
+
+		communityInfluencers = new HashMap<Integer, HashSet<Integer>>();
 
 		for (Map.Entry<Integer, HashSet<Integer>> entry : communityUsers.entrySet()) {
 			HashSet<Integer> hs = new HashSet<Integer>();
@@ -140,7 +123,18 @@ public class CentralityTester {
 		// correlation with rest of network
 		HashMap<Integer, ArrayList<Double>> correlations = new HashMap<Integer, ArrayList<Double>>();
 
+		double communityCorrelation = 0.0;
+		int overallCounter = 0;
+
 		for (int user : userCommunity.keySet()) {
+
+			for (int comMember : communityUsers.get(userCommunity.get(user))) {
+				if (comMember != user) {
+					communityCorrelation += userSimilarities.get(user).get(comMember);
+					overallCounter++;
+				}
+			}
+
 			if (!communityInfluencers.get(userCommunity.get(user)).contains(user)) {
 				ArrayList<Double> corrs = new ArrayList<Double>();
 
@@ -181,16 +175,17 @@ public class CentralityTester {
 			}
 		}
 
+		communityCorrelation /= overallCounter;
+
+		// This is the baseline correlation (average correlation of users with
+		// the whole community)
+		System.out.println("Baseline correlation: " + communityCorrelation);
+
 		double influencerAverage = 0.0;
 		double communityAverage = 0.0;
 		double networkAverage = 0.0;
 
-		double influencerCommunityDifference = 0.0;
-		double influencerNetworkDifference = 0.0;
-		double communityNetworkDifference = 0.0;
 		int counter = 0;
-
-		DecimalFormat df = new DecimalFormat("#.####");
 
 		for (Map.Entry<Integer, ArrayList<Double>> entry : correlations.entrySet()) {
 			if (Double.isNaN(entry.getValue().get(1))) {
@@ -201,43 +196,13 @@ public class CentralityTester {
 			communityAverage += entry.getValue().get(1);
 			networkAverage += entry.getValue().get(2);
 
-			influencerCommunityDifference += (entry.getValue().get(0) - entry.getValue().get(1));
-			influencerNetworkDifference += (entry.getValue().get(0) - entry.getValue().get(2));
-			communityNetworkDifference += (entry.getValue().get(1) - entry.getValue().get(2));
-
 			counter++;
 		}
 
-		System.out.println("influencerAverage: " + df.format(influencerAverage / counter));
-		System.out.println("communityAverage: " + df.format(communityAverage / counter));
-		System.out.println("networkAverage: " + df.format(networkAverage / counter));
-
+		// Store the resulting average correlations
 		results[influencerSize - 1][0] = influencerAverage / counter;
 		results[influencerSize - 1][1] = communityAverage / counter;
 		results[influencerSize - 1][2] = networkAverage / counter;
-
-		System.out.println("influencer-community: "
-				+ df.format(influencerCommunityDifference / counter));
-		System.out.println("influencer-network: "
-				+ df.format(influencerNetworkDifference / counter));
-		System.out.println("community-network: " + df.format(communityNetworkDifference / counter));
-	}
-
-	private static void readUserErrorDifferences(String fileName) {
-
-		try {
-			BufferedReader bf = new BufferedReader(new FileReader(fileName));
-			String line;
-			while ((line = bf.readLine()) != null) {
-				String[] s = line.split("\t");
-				userErrorDifferences.put(Integer.parseInt(s[0]), Double.parseDouble(s[1]));
-			}
-
-			bf.close();
-
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 	}
 
@@ -273,7 +238,7 @@ public class CentralityTester {
 
 	public static void setUpCommunities() {
 		CWrapper cwrapper = CWrapper.getInstance();
-		double[] communitiesDouble = cwrapper.getCommunities(userFriends, 1);
+		double[] communitiesDouble = cwrapper.getCommunities(userFriends, 0);
 		double[] centralities = cwrapper.getNormalizedCentrality(userFriends, 0);
 		double[] degreesDouble = cwrapper.getCentrality(userFriends, 0);
 

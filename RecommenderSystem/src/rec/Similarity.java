@@ -1,9 +1,14 @@
 package rec;
 
+/**
+ * This is the class that implements the different similarity metrics.
+ * 
+ * @author matthiasfelix
+ *
+ */
 public class Similarity {
 
-	public static double calculateCosineSimilarity(double[] ratings1,
-			double[] ratings2) {
+	public static double calculateCosineSimilarity(double[] ratings1, double[] ratings2) {
 
 		double numerator = 0, denominator1 = 0, denominator2 = 0;
 
@@ -21,8 +26,8 @@ public class Similarity {
 
 	}
 
-	public static double calculatePearsonCorrelation(double[] ratings1,
-			double[] ratings2, double average1, double average2) {
+	public static double calculatePearsonCorrelation(double[] ratings1, double[] ratings2,
+			double average1, double average2) {
 
 		double numerator = 0, denominator1 = 0, denominator2 = 0;
 

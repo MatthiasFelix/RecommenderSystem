@@ -4,10 +4,15 @@ import generator.CrossValidator;
 import generator.RatingGenerator;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import predictors.AverageBasedPredictor;
 import predictors.ItemBasedPredictor;
@@ -27,7 +32,7 @@ public class Recommender {
 
 	private static String parameterFile = "src/parameters.txt";
 
-	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_AVERAGE_270714.txt";
+	private static String resultFile = "/Users/matthiasfelix/git/RecommenderSystem/RecommenderSystem/results/RESULTS_SOCIALUSERBASED_310714.txt";
 
 	private static final boolean DEBUG = true;
 
@@ -74,9 +79,11 @@ public class Recommender {
 	private static int k = 5;
 	private static int repetitions = 1;
 
-	// private static HashMap<Integer, HashSet<Double>> errors;
-	// private static HashMap<Integer, Double> errorDifference = new
-	// HashMap<Integer, Double>();
+	private static HashMap<Integer, ArrayList<Double>> userbasedErrors = new HashMap<Integer, ArrayList<Double>>();
+	private static HashMap<Integer, ArrayList<Double>> socialuserbasedErrors = new HashMap<Integer, ArrayList<Double>>();
+
+	private static HashMap<Integer, Double> userbasedAverages = new HashMap<Integer, Double>();
+	private static HashMap<Integer, Double> socialuserbasedAverages = new HashMap<Integer, Double>();
 
 	/**
 	 * The main function sets the parameters, reads the training and test data
@@ -145,23 +152,50 @@ public class Recommender {
 			// Run all tests (all combinations of the specified settings)
 			runAllTests(data);
 
+			// Compute average errors
+
+			for (Map.Entry<Integer, ArrayList<Double>> entry : userbasedErrors.entrySet()) {
+				double average = 0.0;
+				for (Double d : entry.getValue()) {
+					average += d;
+				}
+				average = Math.sqrt(average / entry.getValue().size());
+				userbasedAverages.put(entry.getKey(), average);
+			}
+			for (Map.Entry<Integer, ArrayList<Double>> entry : socialuserbasedErrors.entrySet()) {
+				double average = 0.0;
+				for (Double d : entry.getValue()) {
+					average += d;
+				}
+				average = Math.sqrt(average / entry.getValue().size());
+				socialuserbasedAverages.put(entry.getKey(), average);
+			}
+
 			// Test users
-			/*
-			 * File f = new File(rootPath + "results/userErrors01.txt");
-			 * 
-			 * try {
-			 * 
-			 * BufferedWriter bw = new BufferedWriter(new FileWriter(f));
-			 * 
-			 * for (Map.Entry<Integer, Double> entry :
-			 * errorDifference.entrySet()) { System.out.println("User " +
-			 * entry.getKey() + ": Diff = " + entry.getValue());
-			 * bw.write(entry.getKey() + "\t" + entry.getValue() + "\n"); }
-			 * 
-			 * bw.close();
-			 * 
-			 * } catch (IOException e) { e.printStackTrace(); }
-			 */
+			File f = new File(rootPath + "results/userErrors03.txt");
+
+			try {
+
+				BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+
+				for (Integer user : userbasedAverages.keySet()) {
+					Double userAverage = userbasedAverages.get(user);
+					Double socialuserAverage = socialuserbasedAverages.get(user);
+					if (data.getUserFriends().containsKey(user)) {
+						bw.write(user + "\t" + (userAverage - socialuserAverage) + "\t"
+								+ data.getUserFriends().get(user).size() + "\n");
+					} else {
+						bw.write(user + "\t" + (userAverage - socialuserAverage) + "\t0\n");
+					}
+
+				}
+
+				bw.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
 			if (CREATERESULTFILE) {
 				resultSaver.writeToFile(resultFile);
 			}
@@ -376,35 +410,29 @@ public class Recommender {
 			}
 		}
 
-		// errors = new HashMap<Integer, HashSet<Double>>();
-
 		// compute the root mean squared error
 		double RMSE = 0;
 		for (int i = 0; i < N; i++) {
 			double error = (predictions[i] - testData[i][2]) * (predictions[i] - testData[i][2]);
-			/*
-			 * if (!errors.containsKey(testData[i][0])) { HashSet<Double> hs =
-			 * new HashSet<Double>(); errors.put((int) testData[i][0], hs); }
-			 * errors.get((int) testData[i][0]).add(error);
-			 */
+
+			if (predictor.equals("userbased")) {
+				if (!userbasedErrors.containsKey((int) testData[i][0])) {
+					ArrayList<Double> hs = new ArrayList<Double>();
+					userbasedErrors.put((int) testData[i][0], hs);
+				}
+				userbasedErrors.get((int) testData[i][0]).add(error);
+			} else if (predictor.equals("socialuser")) {
+				if (!socialuserbasedErrors.containsKey((int) testData[i][0])) {
+					ArrayList<Double> hs = new ArrayList<Double>();
+					socialuserbasedErrors.put((int) testData[i][0], hs);
+				}
+				socialuserbasedErrors.get((int) testData[i][0]).add(error);
+			}
+
 			RMSE += error;
 		}
 		RMSE = Math.sqrt(RMSE / (double) N);
 
-		/*
-		 * for (Map.Entry<Integer, HashSet<Double>> entry : errors.entrySet()) {
-		 * if (entry.getValue().size() != 0) { double e = 0.0; for (Double error
-		 * : entry.getValue()) e += error; e /= entry.getValue().size(); e =
-		 * Math.sqrt(e); if (!errorDifference.containsKey(entry.getKey()))
-		 * errorDifference.put(entry.getKey(), 0.0); if
-		 * (predictor.equals("userbased")) { errorDifference
-		 * .replace(entry.getKey(), errorDifference.get(entry.getKey()) + e); }
-		 * else if (predictor.equals("socialuser")) { errorDifference
-		 * .replace(entry.getKey(), errorDifference.get(entry.getKey()) - e); }
-		 * System.out.println("User " + entry.getKey() + ": " + e); } else {
-		 * System.out.println("\nUser " + entry.getKey() +
-		 * " has no predictions.\n"); } }
-		 */
 		return RMSE;
 	}
 
